@@ -65,6 +65,11 @@ void setup() {
 #endif
 
   Serial.println("Controle Fuzzy de Motor DC iniciado.");
+#if USE_SIMULATED_PLANT
+  Serial.println("Modo: simulado.");
+#else
+  Serial.println("Modo: motor e encoder reais.");
+#endif
   Serial.println("Digite 1/2/3 para SP1/SP2/SP3.");
 }
 

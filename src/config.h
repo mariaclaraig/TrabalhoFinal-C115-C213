@@ -26,7 +26,8 @@
 
 // ---------------- Planta / encoder (MEDIR/CALIBRAR) --------
 #define RPM_MAX        200.0f // RPM máx nominal do eixo (malha aberta, sem carga)
-#define PULSES_PER_REV  11.0f // pulsos por volta do EIXO = 11 x redução (canal A, borda de subida)
+#define GEAR_RATIO      34.0f // reducao aproximada do 25GA370 usado no projeto
+#define PULSES_PER_REV (11.0f * GEAR_RATIO) // canal A, borda de subida, no eixo de saida
 #define RPM_FILTER_A    0.30f // peso do filtro passa-baixa do RPM (0..1; menor = mais suave)
 
 // ---------------- Set points (RPM) -------------------------
@@ -37,6 +38,6 @@
 // ---------------- Modo de teste sem hardware ---------------
 // 1 = usa planta simulada de 1ª ordem (não lê o encoder, não aciona o motor de verdade)
 // 0 = usa o motor/encoder reais
-#define USE_SIMULATED_PLANT  1
+#define USE_SIMULATED_PLANT  0
 #define SIM_K    (RPM_MAX / 100.0f)  // ganho: RPM por % de PWM
 #define SIM_TAU  0.30f               // constante de tempo (s)
