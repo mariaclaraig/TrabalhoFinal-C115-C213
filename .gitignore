@@ -3,3 +3,6 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+
+# Material de apoio / rascunhos (não versionar)
+.dont_commit/
