@@ -13,12 +13,14 @@
 #include <Arduino.h>
 #include "config.h"
 #include "fuzzy.h"
+#include "metrics.h"
 
 // ------------------- Estado do controlador -----------------
-static float g_setpoint = SP1;     // RPM desejado
+static float g_setpoint = SP1;     // RPM desejado (alterável por Serial)
 static float u    = 0.0f;          // saída acumulada do controlador (0..100 %)
 static float ePrev = 0.0f;         // erro anterior (para Δe)
 static float rpmFilt = 0.0f;       // RPM filtrado
+static Metrics metrics;            // sobressinal, tempo de acomodação, erro em regime
 
 // ------------------- Encoder (modo real) -------------------
 static volatile long encCount = 0;
@@ -63,6 +65,8 @@ void setup() {
 #if !USE_SIMULATED_PLANT
   attachInterrupt(digitalPinToInterrupt(PIN_ENC_A), onEncA, RISING);
 #endif
+
+  metricsInit(&metrics);
 
   Serial.println("Controle Fuzzy de Motor DC iniciado.");
 #if USE_SIMULATED_PLANT
@@ -111,10 +115,13 @@ void loop() {
   int duty = (int)(u * PWM_MAX_DUTY / 100.0f + 0.5f);
   ledcWrite(PWM_CHANNEL, duty);
 
-  // 5) Telemetria (formato do Serial Plotter)
-  Serial.printf("SP:%.1f,RPM:%.1f,u:%.1f\n", g_setpoint, rpmFilt, u);
+  // 5) Métricas de desempenho (calculadas no ESP -> ver metrics.cpp)
+  float tsec = now / 1000.0f;
+  metricsUpdate(&metrics, g_setpoint, rpmFilt, tsec);
 
-  // ---- Gancho MQTT (ver .dont_commit/02-comunicacao-mqtt.md) ----
-  // Substitua a leitura serial do SP por 'motor/setpoint' e esta linha
-  // de telemetria por publishTelemetry(now/1000.0f, g_setpoint, rpmFilt, e, u);
+  // 6) Telemetria pelo Serial Plotter. As métricas mp/ts/ess já são calculadas
+  //    (struct metrics) e irão pelo MQTT quando a camada de comunicação for
+  //    implementada (ver .dont_commit/02-comunicacao-mqtt.md).
+  Serial.printf("SP:%.1f,RPM:%.1f,u:%.1f,mp:%.1f,ts:%.1f,ess:%.1f\n",
+                g_setpoint, rpmFilt, u, metrics.mp, metrics.ts, metrics.ess);
 }

@@ -41,3 +41,9 @@
 #define USE_SIMULATED_PLANT  0
 #define SIM_K    (RPM_MAX / 100.0f)  // ganho: RPM por % de PWM
 #define SIM_TAU  0.30f               // constante de tempo (s)
+
+// ---------------- Métricas de desempenho -------------------
+// Calculadas no ESP32 (resetam a cada troca de set point). Irão por MQTT quando
+// a camada de comunicação for implementada (ver .dont_commit/02-comunicacao-mqtt.md).
+#define METRICS_BAND   0.02f   // faixa de acomodação (±2 %·SP)
+#define METRICS_AVG_N  20      // janela (amostras) p/ erro em regime
