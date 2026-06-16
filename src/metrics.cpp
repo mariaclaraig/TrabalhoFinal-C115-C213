@@ -5,7 +5,7 @@
 //  que exige estado (por isso fica num módulo dedicado).
 // ============================================================
 #include <math.h>
-#include "metrics.h"
+#include "../include/metrics.h"
 
 static void resetWindow(Metrics* m) { m->idx = 0; m->count = 0; }
 

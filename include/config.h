@@ -43,7 +43,18 @@
 #define SIM_TAU  0.30f               // constante de tempo (s)
 
 // ---------------- Métricas de desempenho -------------------
-// Calculadas no ESP32 (resetam a cada troca de set point). Irão por MQTT quando
-// a camada de comunicação for implementada (ver .dont_commit/02-comunicacao-mqtt.md).
+// Calculadas no ESP32 (resetam a cada troca de set point) e publicadas por MQTT.
 #define METRICS_BAND   0.02f   // faixa de acomodação (±2 %·SP)
 #define METRICS_AVG_N  20      // janela (amostras) p/ erro em regime
+
+// ---------------- Wi-Fi (PREENCHER) ------------------------
+#define WIFI_SSID  "SuaRede"
+#define WIFI_PASS  "SuaSenha"
+
+// ---------------- MQTT -------------------------------------
+#define MQTT_HOST      "192.168.0.123"   // IP do PC que roda o Mosquitto
+#define MQTT_PORT      1883
+#define MQTT_CLIENTID  "esp32-motor"
+#define TOP_SETPOINT   "motor/setpoint"  // assina (set point vindo do dashboard)
+#define TOP_CMD        "motor/cmd"        // assina (start/stop)
+#define TOP_TELEMETRY  "motor/telemetry"  // publica (telemetria + métricas)

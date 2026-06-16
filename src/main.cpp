@@ -11,12 +11,14 @@
 //  Veja .dont_commit/01-projeto-geral.md e 03-controlador-fuzzy.md
 // ============================================================
 #include <Arduino.h>
-#include "config.h"
-#include "fuzzy.h"
-#include "metrics.h"
+#include "../include/config.h"
+#include "../include/fuzzy.h"
+#include "../include/metrics.h"
+#include "../include/comms.h"
 
 // ------------------- Estado do controlador -----------------
-static float g_setpoint = SP1;     // RPM desejado (alterável por Serial)
+volatile float g_setpoint = SP1;   // RPM desejado (alterável por Serial ou MQTT)
+volatile bool  g_running  = true;  // start/stop da atuação (motor/cmd)
 static float u    = 0.0f;          // saída acumulada do controlador (0..100 %)
 static float ePrev = 0.0f;         // erro anterior (para Δe)
 static float rpmFilt = 0.0f;       // RPM filtrado
@@ -67,6 +69,7 @@ void setup() {
 #endif
 
   metricsInit(&metrics);
+  commsSetup();                    // Wi-Fi + MQTT (não-bloqueante)
 
   Serial.println("Controle Fuzzy de Motor DC iniciado.");
 #if USE_SIMULATED_PLANT
@@ -78,6 +81,7 @@ void setup() {
 }
 
 void loop() {
+  commsLoop();                     // mantém Wi-Fi/MQTT vivos e processa SP/cmd recebidos
   readSerialSetpoint();
 
   // Temporização do laço de controle (10 Hz)
@@ -110,6 +114,7 @@ void loop() {
   u += du;
   if (u < 0.0f)   u = 0.0f;       // saturação no limite físico
   if (u > 100.0f) u = 100.0f;
+  if (!g_running) u = 0.0f;       // comando de parada recebido por MQTT (motor/cmd)
 
   // 4) Atuação (PWM 0..PWM_MAX_DUTY)
   int duty = (int)(u * PWM_MAX_DUTY / 100.0f + 0.5f);
@@ -119,9 +124,9 @@ void loop() {
   float tsec = now / 1000.0f;
   metricsUpdate(&metrics, g_setpoint, rpmFilt, tsec);
 
-  // 6) Telemetria pelo Serial Plotter. As métricas mp/ts/ess já são calculadas
-  //    (struct metrics) e irão pelo MQTT quando a camada de comunicação for
-  //    implementada (ver .dont_commit/02-comunicacao-mqtt.md).
+  // 6) Telemetria: Serial Plotter (debug local) + MQTT (dashboard)
   Serial.printf("SP:%.1f,RPM:%.1f,u:%.1f,mp:%.1f,ts:%.1f,ess:%.1f\n",
                 g_setpoint, rpmFilt, u, metrics.mp, metrics.ts, metrics.ess);
+  publishTelemetry(tsec, g_setpoint, rpmFilt, e, u,
+                   metrics.mp, metrics.ts, metrics.ess);
 }

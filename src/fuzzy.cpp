@@ -5,7 +5,7 @@
 //  Etapas: fuzzificação -> inferência (min) -> agregação (max) -> centroide.
 // ============================================================
 #include <math.h>
-#include "fuzzy.h"
+#include "../include/fuzzy.h"
 
 // ------------------------------------------------------------
 // 1) Função de pertinência trapezoidal (a <= b <= c <= d)
