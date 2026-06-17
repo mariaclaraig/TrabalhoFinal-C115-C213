@@ -1,0 +1,139 @@
+(function () {
+  "use strict";
+
+
+
+  const TERMS = ["NG", "NP", "ZE", "PP", "PG"];
+  const CENTERS = [-1, -0.5, 0, 0.5, 1];
+
+  function memberships(xnorm) {
+    const x = Math.max(-1, Math.min(1, xnorm));
+    return CENTERS.map((c, i) => {
+      let mu = 1 - Math.abs(x - c) / 0.5;
+      mu = Math.max(0, mu);
+      if (i === 0 && x < c) mu = 1;
+      if (i === 4 && x > c) mu = 1;
+      return mu;
+    });
+  }
+
+  function ruleOut(eIdx, deIdx) {
+    const s = (eIdx - 2) + (deIdx - 2);
+    return Math.max(-2, Math.min(2, s)) + 2;
+  }
+
+  function defuzz(en, den) {
+    const me = memberships(en);
+    const mde = memberships(den);
+    let num = 0, denw = 0;
+    for (let i = 0; i < 5; i++) {
+      for (let j = 0; j < 5; j++) {
+        const w = Math.min(me[i], mde[j]);
+        if (w <= 0) continue;
+        num += w * CENTERS[ruleOut(i, j)];
+        denw += w;
+      }
+    }
+    return denw > 0 ? num / denw : 0;
+  }
+
+  const Fuzzy = {
+    TERMS, CENTERS, memberships, ruleOut, defuzz,
+    SCALE_E: 200,
+    SCALE_DE: 50,
+  };
+
+
+  function DataEngine(opts) {
+    opts = opts || {};
+    this.url = opts.url || "ws://localhost:9001";
+    this.topics = {
+      telemetry: "motor/telemetry",
+      setpoint: "motor/setpoint",
+      cmd: "motor/cmd",
+    };
+    this.onSample = null;
+    this.onStatus = null;
+    this.client = null;
+    this._connected = false;
+    this._lastMsg = 0;
+    this._statusTimer = null;
+  }
+
+  DataEngine.prototype.start = function () {
+    this._connectMqtt();
+
+    this._statusTimer = setInterval(() => this._emitStatus(), 800);
+  };
+
+  DataEngine.prototype._emitStatus = function () {
+    let s;
+    if (this._connected && performance.now() - this._lastMsg < 3000) s = "connected";
+    else if (this._connected) s = "connected-idle";
+    else if (this.client) s = "reconnecting";
+    else s = "offline";
+    if (this.onStatus) this.onStatus(s);
+  };
+
+  DataEngine.prototype._connectMqtt = function () {
+    if (typeof mqtt === "undefined") { this._emitStatus(); return; }
+    try {
+      const client = mqtt.connect(this.url, {
+        reconnectPeriod: 2500,
+        connectTimeout: 4000,
+        clientId: "dash-mix-" + Math.random().toString(16).slice(2, 8),
+      });
+      this.client = client;
+      client.on("connect", () => {
+        this._connected = true;
+        client.subscribe(this.topics.telemetry);
+        this._emitStatus();
+      });
+      client.on("reconnect", () => { this._connected = false; this._emitStatus(); });
+      client.on("close",     () => { this._connected = false; this._emitStatus(); });
+      client.on("offline",   () => { this._connected = false; this._emitStatus(); });
+      client.on("error",     () => {});
+      client.on("message", (topic, payload) => {
+        if (topic !== this.topics.telemetry) return;
+        let m;
+        try { m = JSON.parse(payload.toString()); } catch (e) { return; }
+        this._lastMsg = performance.now();
+        const sample = {
+          t: m.t,
+          sp: m.sp,
+          rpm: m.rpm,
+          err: m.err != null ? m.err : (m.sp - m.rpm),
+          u: m.u,
+          mp: m.mp != null ? m.mp : null,
+          ts: m.ts != null ? m.ts : null,
+          ess: m.ess != null ? m.ess : null,
+          wall: performance.now(),
+        };
+        if (this.onSample) this.onSample(sample);
+        this._emitStatus();
+      });
+    } catch (e) {
+      this._emitStatus();
+    }
+  };
+
+
+  DataEngine.prototype.setSetpoint = function (v) {
+    v = Math.max(0, Math.round(v));
+    if (this.client && this.client.connected) {
+      this.client.publish(this.topics.setpoint, String(v), { retain: true });
+    }
+  };
+
+  DataEngine.prototype.setRunning = function (on) {
+    if (this.client && this.client.connected) {
+      this.client.publish(this.topics.cmd, on ? "start" : "stop");
+    }
+  };
+
+
+  DataEngine.prototype.setLoad = function (on) {};
+
+  window.Fuzzy = Fuzzy;
+  window.DataEngine = DataEngine;
+})();
