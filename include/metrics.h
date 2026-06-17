@@ -1,29 +1,44 @@
 #pragma once
-// ============================================================
-//  Métricas de desempenho do controle (Req. 4.11)
-//  Calculadas no ESP32 e publicadas por MQTT.
-//  Resetam automaticamente a cada troca de set point.
-//    mp  = sobressinal (%)
-//    ts  = tempo de acomodação (s)
-//    ess = erro em regime (RPM)
-// ============================================================
+
+/**
+ * @file metrics.h
+ * @brief Interface das métricas de desempenho do controle.
+*/
+
 #include "config.h"
 
+/**
+ * @brief Estrutura que armazena esrados necessários para cálculo das
+ * métricas de desempenho.
+ */
 struct Metrics {
-  float peak;      // maior RPM desde a última troca de SP
-  float tStart;    // instante da última troca de SP (s)
-  float tLastOut;  // último instante fora da faixa de acomodação (s)
-  float lastSp;    // SP anterior (detecta troca)
+  float peak;
+  float tStart;
+  float tLastOut;
+  float lastSp;
 
-  float buf[METRICS_AVG_N];  // janela p/ erro em regime
+  float buf[METRICS_AVG_N];
   int   idx, count;
 
-  // saídas
-  float mp;        // sobressinal (%)
-  float ts;        // tempo de acomodação (s)
-  float ess;       // erro em regime (RPM)
-  bool  settled;   // está dentro da faixa agora?
+  float mp;
+  float ts;
+  float ess;
+  bool  settled;
 };
 
+/**
+ * @brief Inicializa a estrutura de métricas.
+ * 
+ * @param m Ponteiro para a estrutura de métricas a ser inicializada.
+ */
 void metricsInit(Metrics* m);
+
+/**
+ * @brief Atualiza as métricas de desempenho com base nos parâmetros.
+ * 
+ * @param m Ponteiro para a estrutura de métricas a ser atualizada.
+ * @param sp Set point atual (RPM)
+ * @param rpm RPM atual
+ * @param t Tempo atual (s)
+ */
 void metricsUpdate(Metrics* m, float sp, float rpm, float t);

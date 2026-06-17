@@ -1,4 +1,3 @@
-/* chart.jsx — Gráfico de resposta temporal (RPM × t + linha do set point) */
 const { useRef: chartRef, useEffect: chartEffect } = React;
 
 function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
@@ -24,7 +23,7 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
     const xOf = (wall) => padL + ((wall - tMin) / (windowSec * 1000)) * plotW;
     const yOf = (v) => padT + plotH - (Math.max(0, Math.min(ymax, v)) / ymax) * plotH;
 
-    // grade
+
     ctx.strokeStyle = "rgba(150,175,205,0.10)";
     ctx.fillStyle = "rgba(130,148,168,0.85)";
     ctx.lineWidth = 1;
@@ -35,7 +34,7 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
       ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
       ctx.fillText(String(v), padL - 8, y);
     }
-    // grade vertical (a cada 10s)
+
     ctx.textAlign = "center"; ctx.textBaseline = "top";
     for (let s = 0; s <= windowSec; s += 10) {
       const wall = now - (windowSec - s) * 1000;
@@ -48,7 +47,7 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
 
     const vis = samples.filter((s) => s.wall >= tMin - 200);
 
-    // eventos (perturbação / mudança de SP) — marcas verticais
+
     (events || []).forEach((ev) => {
       if (ev.wall < tMin) return;
       const x = xOf(ev.wall);
@@ -66,7 +65,7 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
     });
 
     if (vis.length > 1) {
-      // banda de ±2% em torno do SP atual
+
       const spNow = vis[vis.length - 1].sp;
       if (spNow > 0) {
         const yb1 = yOf(spNow * 1.02), yb2 = yOf(spNow * 0.98);
@@ -74,7 +73,7 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
         ctx.fillRect(padL, yb1, plotW, yb2 - yb1);
       }
 
-      // linha do set point (degrau, tracejada)
+
       ctx.strokeStyle = "#f5a524";
       ctx.lineWidth = 2;
       ctx.setLineDash([7, 5]);
@@ -87,7 +86,7 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // área sob a curva de rpm
+
       const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
       grad.addColorStop(0, "rgba(54,214,195,0.28)");
       grad.addColorStop(1, "rgba(54,214,195,0.02)");
@@ -102,7 +101,7 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
       ctx.closePath();
       ctx.fillStyle = grad; ctx.fill();
 
-      // traço de rpm
+
       ctx.strokeStyle = "#5fe9d8";
       ctx.lineWidth = 2.4;
       ctx.lineJoin = "round";
@@ -116,7 +115,7 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // ponto atual
+
       const last = vis[vis.length - 1];
       ctx.fillStyle = "#5fe9d8";
       ctx.beginPath(); ctx.arc(xOf(last.wall), yOf(last.rpm), 3.5, 0, Math.PI * 2); ctx.fill();

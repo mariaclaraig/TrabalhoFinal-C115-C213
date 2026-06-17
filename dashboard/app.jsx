@@ -1,10 +1,9 @@
-/* app.jsx — composição do dashboard (dados reais via MQTT, sem mock) */
 const { useState, useEffect, useRef, useCallback } = React;
 
 const SP_PRESETS = [60, 120, 180];
 const MAX_SAMPLES = 800;
 
-// Configuração visual fixa (era ajustável pelo painel de tweaks do design tool)
+
 const CFG = {
   accent: "#f5a524",
   trace: "#36d6c3",
@@ -49,11 +48,11 @@ function App() {
   const engineRef = useRef(null);
   const prevErrRef = useRef(0);
 
-  // ---- inicializa engine (somente MQTT) ----
+
   useEffect(() => {
     const eng = new window.DataEngine({ url: "ws://localhost:9001" });
     engineRef.current = eng;
-    window.dashboardEngine = eng; // hook de debug: dashboardEngine.onSample({...}) injeta um frame de teste
+    window.dashboardEngine = eng;
     eng.onStatus = (s) => setStatus(s);
     eng.onSample = (smp) => {
       const derr = smp.err - prevErrRef.current;
@@ -65,14 +64,14 @@ function App() {
         next.push(smp);
         return next;
       });
-      // KPIs vêm prontos do firmware (src/metrics.cpp): mp, ts, ess
+
       setKpi({ tset: smp.ts, over: smp.mp, ess: smp.ess });
     };
     eng.start();
     return () => { clearInterval(eng._statusTimer); if (eng.client) eng.client.end(true); };
   }, []);
 
-  // ---- comandos ----
+
   const applySp = useCallback((v) => {
     v = Math.max(0, Math.round(v));
     setSp(v);
@@ -92,20 +91,20 @@ function App() {
     setLoad((l) => {
       const nl = !l;
       engineRef.current.setLoad(nl);
-      // marca a perturbação no gráfico (a carga real é física: segurar o eixo)
+
       setEvents((prev) => [...prev.slice(-12), { wall: performance.now(), type: "load", label: nl ? "CARGA" : "ALÍVIO" }]);
       return nl;
     });
   }, []);
 
-  // ---- derivados ----
+
   const onTarget = sp > 0 && hasData && Math.abs(latest.err) <= sp * 0.02 && running;
   const saturated = hasData && latest.u >= 99;
   const stView = STATUS_MAP[status] || STATUS_MAP.offline;
 
   const fmt = (v, d) => (hasData ? (d ? v.toFixed(d) : Math.round(v)) : "—");
 
-  // aplica as cores de destaque
+
   useEffect(() => {
     document.documentElement.style.setProperty("--amber", t.accent);
     document.documentElement.style.setProperty("--cyan", t.trace);
@@ -113,7 +112,7 @@ function App() {
 
   return (
     <div className="app">
-      {/* HEADER */}
+
       <header className="hdr">
         <div className="brand">
           <GearIcon spin={running && hasData} />
@@ -132,9 +131,9 @@ function App() {
         </div>
       </header>
 
-      {/* GRID PRINCIPAL */}
+
       <div className="main">
-        {/* coluna controle */}
+
         <div className="col">
           <div className="card framed">
             <div className="card-h">
@@ -181,7 +180,7 @@ function App() {
           </div>
         </div>
 
-        {/* coluna gráfico */}
+
         <div className="col col-chart">
           <div className="card framed">
             <div className="card-h">
@@ -200,7 +199,7 @@ function App() {
           </div>
         </div>
 
-        {/* coluna leituras */}
+
         <div className="col">
           <div className="card framed">
             <div className="card-h"><span className="label">Leituras ao Vivo</span></div>
@@ -253,7 +252,7 @@ function App() {
         </div>
       </div>
 
-      {/* FUZZY */}
+
       {t.showFuzzy && (
         <div className="card framed" style={{ padding: "16px 16px 18px" }}>
           <div className="card-h" style={{ marginBottom: 14 }}>

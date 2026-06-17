@@ -1,9 +1,8 @@
-/* tach.jsx — Tacômetro analógico com marcador de set point */
 const { useMemo: tachMemo } = React;
 
 function Tachometer({ rpm, sp, max = 240, onTarget }) {
   const cx = 150, cy = 150, R = 122;
-  const A0 = -225, A1 = 45;            // varredura 270° (canto inf-esq -> inf-dir)
+  const A0 = -225, A1 = 45;
   const sweep = A1 - A0;
 
   const toRad = (d) => (d * Math.PI) / 180;
@@ -24,7 +23,7 @@ function Tachometer({ rpm, sp, max = 240, onTarget }) {
     return arr;
   }, [max]);
 
-  // arco de fundo
+
   const arcPath = (vStart, vEnd, r) => {
     const a0 = angOf(vStart), a1 = angOf(vEnd);
     const [sx, sy] = pt(a0, r), [ex, ey] = pt(a1, r);
@@ -56,16 +55,16 @@ function Tachometer({ rpm, sp, max = 240, onTarget }) {
           <filter id="glow"><feGaussianBlur stdDeviation="2.4" /></filter>
         </defs>
 
-        {/* arco base */}
+
         <path d={arcPath(0, max, R)} fill="none" stroke="rgba(150,175,205,0.14)" strokeWidth="10" strokeLinecap="round" />
-        {/* arco preenchido até rpm */}
+
         <path d={arcPath(0, Math.max(0.1, rpm), R)} fill="none"
               stroke={onTarget ? "var(--green)" : "var(--cyan)"} strokeWidth="10" strokeLinecap="round"
               opacity="0.9" filter="url(#glow)" />
         <path d={arcPath(0, Math.max(0.1, rpm), R)} fill="none"
               stroke={onTarget ? "var(--green)" : "var(--cyan)"} strokeWidth="6" strokeLinecap="round" />
 
-        {/* ticks */}
+
         {ticks.map((t, i) => (
           <g key={i}>
             <line x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
@@ -80,19 +79,19 @@ function Tachometer({ rpm, sp, max = 240, onTarget }) {
           </g>
         ))}
 
-        {/* marcador vermelho do set point */}
+
         <line x1={m1x} y1={m1y} x2={m2x} y2={m2y} stroke="var(--red)" strokeWidth="3.5" strokeLinecap="round" />
         <polygon
           points={`${mlx},${mly} ${mlx - 6},${mly - 9} ${mlx + 6},${mly - 9}`}
           fill="var(--red)" transform={`rotate(${spAng + 90} ${mlx} ${mly})`} />
 
-        {/* ponteiro */}
+
         <line x1={ntx} y1={nty} x2={nx} y2={ny} stroke="url(#needleG)" strokeWidth="4.5" strokeLinecap="round" filter="url(#glow)" />
         <line x1={ntx} y1={nty} x2={nx} y2={ny} stroke="url(#needleG)" strokeWidth="2.6" strokeLinecap="round" />
         <circle cx={cx} cy={cy} r="13" fill="url(#hubG)" stroke="var(--line-2)" />
         <circle cx={cx} cy={cy} r="3.5" fill={onTarget ? "var(--green)" : "var(--cyan-2)"} />
 
-        {/* leitura central */}
+
         <text x={cx} y={cy + 52} textAnchor="middle" fill="var(--text)"
               fontFamily="var(--font-mono)" fontSize="40" fontWeight="700" letterSpacing="-1">
           {Math.round(rpm)}

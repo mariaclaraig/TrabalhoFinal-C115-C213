@@ -1,14 +1,38 @@
 #pragma once
-// ============================================================
-//  Camada de comunicação MQTT (Wi-Fi + PubSubClient)
-//  Veja .dont_commit/02-comunicacao-mqtt.md
-//  Assina:  motor/setpoint, motor/cmd  -> escreve g_setpoint / g_running
-//  Publica: motor/telemetry (telemetria + métricas) em JSON
-// ============================================================
 
+/**
+ * @file comms.h
+ * @brief Interface da camada de comunicação MQTT.
+ */
+
+/**
+ * @brief Setup da comunicação Wi-Fi e MQTT. 
+ */
 void commsSetup();
-void commsLoop();          // chamar com frequência (mantém Wi-Fi/MQTT vivos)
+
+/**
+ * @brief Loop de manutenção da comunicação.
+ */
+void commsLoop();
+
+/**
+ * @brief Verifica se a conexão MQTT está ativa.
+ * @return true se conectado, false caso contrário.
+ */
 bool commsConnected();
 
+/**
+ * @brief Publica dados de telemetria e métricas no tópico MQTT;
+ * se a conexão não estiver ativa, retorna sem publicar.
+ * 
+ * @param t Tempo atual (s)
+ * @param sp Set point atual (RPM)
+ * @param rpm RPM atual
+ * @param err Erro atual (RPM)
+ * @param u Sinal de controle atual (%)
+ * @param mp Sobressinal (%)
+ * @param ts Tempo de acomodação (s)
+ * @param ess Erro em regime (RPM)
+ */
 void publishTelemetry(float t, float sp, float rpm, float err, float u,
                       float mp, float ts, float ess);

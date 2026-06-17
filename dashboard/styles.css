@@ -1,6 +1,3 @@
-/* ============================================================
-   styles.css — SCADA / cockpit industrial (tema escuro)
-   ============================================================ */
 :root {
   --bg:        #0a0d12;
   --bg-grad:   #0c1118;
@@ -41,7 +38,7 @@ body {
   overflow-x: hidden;
 }
 body::before {
-  /* textura de grade fina tipo painel */
+
   content: "";
   position: fixed; inset: 0; pointer-events: none; z-index: 0;
   background-image:
@@ -63,7 +60,7 @@ body::before {
   margin: 0 auto;
 }
 
-/* ---------------- Header ---------------- */
+
 .hdr {
   display: flex; align-items: center; gap: 18px;
   padding: 12px 18px;
@@ -103,7 +100,7 @@ body::before {
 }
 .status .dot::after {
   content: ""; position: absolute; inset: -4px; border-radius: 50%;
-  border: 1px solid currentColor; opacity: 0; 
+  border: 1px solid currentColor; opacity: 0;
 }
 .status.connected .dot { background: var(--green); color: var(--green); box-shadow: 0 0 10px var(--green); }
 .status.reconnecting .dot { background: var(--amber); color: var(--amber); animation: blink 1s steps(2) infinite; }
@@ -123,7 +120,7 @@ body::before {
 }
 .src-toggle button.on { background: var(--panel-hi); color: var(--amber-2); }
 
-/* ---------------- Grid principal ---------------- */
+
 .main {
   display: grid;
   grid-template-columns: 360px minmax(0, 1fr) 320px;
@@ -161,7 +158,7 @@ body::before {
   letter-spacing: 0.08em;
 }
 
-/* corner ticks decorativos */
+
 .card.framed::before, .card.framed::after {
   content: ""; position: absolute; width: 10px; height: 10px;
   border-color: var(--line-2); border-style: solid; opacity: 0.8;
@@ -169,7 +166,7 @@ body::before {
 .card.framed::before { top: 8px; left: 8px; border-width: 1px 0 0 1px; }
 .card.framed::after { bottom: 8px; right: 8px; border-width: 0 1px 1px 0; }
 
-/* ---------------- Tacômetro ---------------- */
+
 .tach { display: flex; flex-direction: column; align-items: center; }
 .tach svg { width: 100%; max-width: 300px; height: auto; }
 .tach .legend {
@@ -178,7 +175,7 @@ body::before {
 }
 .tach .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
 
-/* ---------------- Controles ---------------- */
+
 .run-row { display: flex; gap: 10px; }
 .btn {
   font-family: var(--font-disp); font-weight: 700; letter-spacing: 0.08em;
@@ -226,9 +223,9 @@ input[type="range"].rng::-moz-range-thumb {
   background: var(--amber-2); cursor: grab;
 }
 
-/* ---------------- Readouts ---------------- */
-.readout { 
-  display: grid; grid-template-columns: 1fr; gap: 10px; 
+
+.readout {
+  display: grid; grid-template-columns: 1fr; gap: 10px;
 }
 .ro {
   border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
@@ -252,7 +249,7 @@ input[type="range"].rng::-moz-range-thumb {
 .sat-flag { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.1em; color: var(--red-2); margin-top: 6px; opacity: 0; transition: opacity .2s; }
 .sat-flag.on { opacity: 1; }
 
-/* ---------------- KPIs ---------------- */
+
 .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
 .kpi { border: 1px solid var(--line); border-radius: 11px; padding: 11px 10px; background: rgba(0,0,0,0.22); text-align: left; }
 .kpi .kl { font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted-2); }
@@ -261,7 +258,7 @@ input[type="range"].rng::-moz-range-thumb {
 .kpi.good .kv { color: var(--green); }
 .kpi.warn .kv { color: var(--amber-2); }
 
-/* ---------------- Chart ---------------- */
+
 .col-chart .card { flex: 1; display: flex; flex-direction: column; }
 .chart-host { flex: 1; min-height: 280px; position: relative; }
 .chart-host canvas { width: 100%; height: 100%; display: block; }
@@ -282,7 +279,7 @@ input[type="range"].rng::-moz-range-thumb {
 .load-btn.on { background: linear-gradient(180deg, rgba(255,84,104,0.22), rgba(255,84,104,0.06)); border-color: var(--red); color: var(--red-2); }
 .load-btn.on .led { background: var(--red); box-shadow: 0 0 10px var(--red); }
 
-/* ---------------- Fuzzy ---------------- */
+
 .fuzzy { display: grid; grid-template-columns: 1fr 1fr 360px; gap: 14px; }
 @media (max-width: 1180px) { .fuzzy { grid-template-columns: 1fr 1fr; } .fuzzy .matrix-card { grid-column: 1 / -1; } }
 @media (max-width: 720px) { .fuzzy { grid-template-columns: 1fr; } }
@@ -309,7 +306,7 @@ input[type="range"].rng::-moz-range-thumb {
 .fz-out .odu { font-family: var(--font-mono); font-size: 13px; color: var(--muted); margin-left: auto; }
 .fz-out .odu b { color: var(--text); }
 
-/* matriz 5x5 */
+
 .matrix { display: grid; grid-template-columns: 30px repeat(5, 1fr); gap: 4px; }
 .matrix .mh, .matrix .mc {
   display: flex; align-items: center; justify-content: center;
@@ -326,9 +323,9 @@ input[type="range"].rng::-moz-range-thumb {
 }
 .matrix-axis { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-family: var(--font-mono); font-size: 10px; color: var(--muted-2); letter-spacing: 0.06em; }
 
-/* ---------------- Tweaks ---------------- */
+
 #tweaks-root { position: fixed; z-index: 50; }
 
-/* util */
+
 .mono { font-family: var(--font-mono); }
 .hide { display: none !important; }

@@ -1,11 +1,15 @@
 #pragma once
-// ============================================================
-//  Controlador Fuzzy Mamdani (5 termos) — saída incremental
-//  Entradas:  e  = erro de velocidade  (RPMref - RPM)
-//             de = variação do erro     (de/dt)
-//  Saída:     Δu = INCREMENTO de PWM em pontos percentuais
-//             (fuzzy-PI: acumular u += Δu e saturar 0..100 no chamador)
-//  Veja .dont_commit/03-controlador-fuzzy.md
-// ============================================================
 
+/**
+ * @file fuzzy.h
+ * @brief Interface do controlador fuzzy.
+*/
+
+/**
+ * @brief Controlador fuzzy que recebe o erro e variação do erro.
+ * 
+ * @param e Erro atual (RPM)
+ * @param de Variação do erro (RPM/s)
+ * @return Sinal de controle (PWM %)
+ */
 float fuzzyController(float e, float de);

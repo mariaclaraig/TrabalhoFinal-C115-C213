@@ -1,37 +1,25 @@
-// ============================================================
-//  Controle Fuzzy de Velocidade de Motor DC — ESP32 + L298N
-//  Laço de controle a 10 Hz:
-//    leitura (encoder) -> erro/Δerro -> fuzzy (Δu) -> atuação (PWM) -> telemetria
-//
-//  USE_SIMULATED_PLANT (config.h):
-//    1 -> roda SEM hardware (planta de 1ª ordem) p/ ver no Serial Plotter
-//    0 -> usa motor + encoder reais
-//
-//  Set point: digite 1/2/3 no Serial Monitor para SP1/SP2/SP3.
-//  Veja .dont_commit/01-projeto-geral.md e 03-controlador-fuzzy.md
-// ============================================================
 #include <Arduino.h>
 #include "../include/config.h"
 #include "../include/fuzzy.h"
 #include "../include/metrics.h"
 #include "../include/comms.h"
 
-// ------------------- Estado do controlador -----------------
-volatile float g_setpoint = SP1;   // RPM desejado (alterável por Serial ou MQTT)
-volatile bool  g_running  = true;  // start/stop da atuação (motor/cmd)
-static float u    = 0.0f;          // saída acumulada do controlador (0..100 %)
-static float ePrev = 0.0f;         // erro anterior (para Δe)
-static float rpmFilt = 0.0f;       // RPM filtrado
-static Metrics metrics;            // sobressinal, tempo de acomodação, erro em regime
 
-// ------------------- Encoder (modo real) -------------------
+volatile float g_setpoint = SP1;
+volatile bool  g_running  = true;
+static float u    = 0.0f;
+static float ePrev = 0.0f;
+static float rpmFilt = 0.0f;
+static Metrics metrics;
+
+
 static volatile long encCount = 0;
-static void IRAM_ATTR onEncA() { encCount++; }   // conta bordas de subida do canal A
+static void IRAM_ATTR onEncA() { encCount++; }
 
-// ------------------- Planta simulada -----------------------
+
 #if USE_SIMULATED_PLANT
 static float simRpm = 0.0f;
-// Modelo de 1ª ordem: rpm += (K*u - rpm)/tau * dt
+
 static float plantStep(float u_pct, float dt_s) {
   simRpm += (SIM_K * u_pct - simRpm) / SIM_TAU * dt_s;
   if (simRpm < 0) simRpm = 0;
@@ -39,7 +27,7 @@ static float plantStep(float u_pct, float dt_s) {
 }
 #endif
 
-// ------------------- Leitura do set point ------------------
+
 static void readSerialSetpoint() {
   while (Serial.available()) {
     char c = Serial.read();
@@ -53,15 +41,15 @@ void setup() {
   Serial.begin(115200);
   delay(300);
 
-  // L298N — sentido fixo (IN1=LOW, IN2=HIGH) e PWM em ENA
+
   pinMode(PIN_IN1, OUTPUT);
   pinMode(PIN_IN2, OUTPUT);
   digitalWrite(PIN_IN1, LOW);
   digitalWrite(PIN_IN2, HIGH);
-  ledcSetup(PWM_CHANNEL, PWM_FREQ, PWM_RES_BITS);  // core ESP32 Arduino 2.x
+  ledcSetup(PWM_CHANNEL, PWM_FREQ, PWM_RES_BITS);
   ledcAttachPin(PIN_ENA, PWM_CHANNEL);
 
-  // Encoder
+
   pinMode(PIN_ENC_A, INPUT_PULLUP);
   pinMode(PIN_ENC_B, INPUT_PULLUP);
 #if !USE_SIMULATED_PLANT
@@ -69,7 +57,7 @@ void setup() {
 #endif
 
   metricsInit(&metrics);
-  commsSetup();                    // Wi-Fi + MQTT (não-bloqueante)
+  commsSetup();
 
   Serial.println("Controle Fuzzy de Motor DC iniciado.");
 #if USE_SIMULATED_PLANT
@@ -81,17 +69,17 @@ void setup() {
 }
 
 void loop() {
-  commsLoop();                     // mantém Wi-Fi/MQTT vivos e processa SP/cmd recebidos
+  commsLoop();
   readSerialSetpoint();
 
-  // Temporização do laço de controle (10 Hz)
+
   static unsigned long tPrev = 0;
   unsigned long now = millis();
   if (now - tPrev < (unsigned long)DT_MS) return;
   float dt = (now - tPrev) / 1000.0f;
   tPrev = now;
 
-  // 1) Medição do RPM
+
   float rpm;
 #if USE_SIMULATED_PLANT
   rpm = plantStep(u, dt);
@@ -101,30 +89,30 @@ void loop() {
   interrupts();
   rpm = (pulses / PULSES_PER_REV) / dt * 60.0f;
 #endif
-  // Filtro passa-baixa de 1ª ordem
+
   rpmFilt = RPM_FILTER_A * rpm + (1.0f - RPM_FILTER_A) * rpmFilt;
 
-  // 2) Erro e variação do erro
+
   float e  = g_setpoint - rpmFilt;
   float de = (e - ePrev) / dt;
   ePrev = e;
 
-  // 3) Controlador fuzzy -> incremento de PWM (ação integral)
+
   float du = fuzzyController(e, de);
   u += du;
-  if (u < 0.0f)   u = 0.0f;       // saturação no limite físico
+  if (u < 0.0f)   u = 0.0f;
   if (u > 100.0f) u = 100.0f;
-  if (!g_running) u = 0.0f;       // comando de parada recebido por MQTT (motor/cmd)
+  if (!g_running) u = 0.0f;
 
-  // 4) Atuação (PWM 0..PWM_MAX_DUTY)
+
   int duty = (int)(u * PWM_MAX_DUTY / 100.0f + 0.5f);
   ledcWrite(PWM_CHANNEL, duty);
 
-  // 5) Métricas de desempenho (calculadas no ESP -> ver metrics.cpp)
+
   float tsec = now / 1000.0f;
   metricsUpdate(&metrics, g_setpoint, rpmFilt, tsec);
 
-  // 6) Telemetria: Serial Plotter (debug local) + MQTT (dashboard)
+
   Serial.printf("SP:%.1f,RPM:%.1f,u:%.1f,mp:%.1f,ts:%.1f,ess:%.1f\n",
                 g_setpoint, rpmFilt, u, metrics.mp, metrics.ts, metrics.ess);
   publishTelemetry(tsec, g_setpoint, rpmFilt, e, u,
