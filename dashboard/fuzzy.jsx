@@ -1,5 +1,3 @@
-/* fuzzy.jsx — visualização da lógica fuzzy "pensando" */
-
 const TERM_COLOR = {
   NG: "#ff5468", NP: "#ff8a4d", ZE: "#8294a8", PP: "#5fe9d8", PG: "#3ddc84",
 };

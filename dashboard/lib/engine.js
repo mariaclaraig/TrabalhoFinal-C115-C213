@@ -1,17 +1,8 @@
-/* ============================================================
-   engine.js — Camada de dados do dashboard (somente MQTT)
-   - Conecta no broker MQTT via WebSocket (mqtt.js)
-   - NÃO simula nada: só exibe dados reais de motor/telemetry
-   - Expõe helpers de lógica fuzzy (para o painel "pensando")
-   ============================================================ */
 (function () {
   "use strict";
 
-  /* ---------- Lógica fuzzy (visualização do controlador) ----------
-     Replica a base de regras do firmware (5 termos, PI incremental).
-     SCALE_E / SCALE_DE normalizam o erro e a variação do erro para [-1,1]
-     de acordo com os universos usados no ESP (e: ±200 rpm, de: ±500 rpm/s).
-     derr chega por amostra (10 Hz) -> de/dt = derr*10 -> /500 = derr/50.        */
+
+
   const TERMS = ["NG", "NP", "ZE", "PP", "PG"];
   const CENTERS = [-1, -0.5, 0, 0.5, 1];
 
@@ -20,8 +11,8 @@
     return CENTERS.map((c, i) => {
       let mu = 1 - Math.abs(x - c) / 0.5;
       mu = Math.max(0, mu);
-      if (i === 0 && x < c) mu = 1; // ombro inferior
-      if (i === 4 && x > c) mu = 1; // ombro superior
+      if (i === 0 && x < c) mu = 1;
+      if (i === 4 && x > c) mu = 1;
       return mu;
     });
   }
@@ -48,11 +39,11 @@
 
   const Fuzzy = {
     TERMS, CENTERS, memberships, ruleOut, defuzz,
-    SCALE_E: 200,  // erro (rpm) que satura a entrada normalizada (universo do ESP)
-    SCALE_DE: 50,  // Δerro (rpm/amostra) que satura a entrada normalizada
+    SCALE_E: 200,
+    SCALE_DE: 50,
   };
 
-  /* ---------- Engine (somente MQTT) ---------- */
+
   function DataEngine(opts) {
     opts = opts || {};
     this.url = opts.url || "ws://localhost:9001";
@@ -61,8 +52,8 @@
       setpoint: "motor/setpoint",
       cmd: "motor/cmd",
     };
-    this.onSample = null;   // (sample) => void
-    this.onStatus = null;   // (status) => void  status: connected|connected-idle|reconnecting|offline
+    this.onSample = null;
+    this.onStatus = null;
     this.client = null;
     this._connected = false;
     this._lastMsg = 0;
@@ -71,14 +62,14 @@
 
   DataEngine.prototype.start = function () {
     this._connectMqtt();
-    // Watchdog de status: detecta broker conectado porém sem telemetria fluindo
+
     this._statusTimer = setInterval(() => this._emitStatus(), 800);
   };
 
   DataEngine.prototype._emitStatus = function () {
     let s;
     if (this._connected && performance.now() - this._lastMsg < 3000) s = "connected";
-    else if (this._connected) s = "connected-idle";   // broker ok, mas sem telemetria recente
+    else if (this._connected) s = "connected-idle";
     else if (this.client) s = "reconnecting";
     else s = "offline";
     if (this.onStatus) this.onStatus(s);
@@ -113,9 +104,9 @@
           rpm: m.rpm,
           err: m.err != null ? m.err : (m.sp - m.rpm),
           u: m.u,
-          mp: m.mp != null ? m.mp : null,    // sobressinal (%) — calculado no ESP
-          ts: m.ts != null ? m.ts : null,    // tempo de acomodação (s)
-          ess: m.ess != null ? m.ess : null, // erro em regime (rpm)
+          mp: m.mp != null ? m.mp : null,
+          ts: m.ts != null ? m.ts : null,
+          ess: m.ess != null ? m.ess : null,
           wall: performance.now(),
         };
         if (this.onSample) this.onSample(sample);
@@ -126,7 +117,7 @@
     }
   };
 
-  /* ---------- Comandos ---------- */
+
   DataEngine.prototype.setSetpoint = function (v) {
     v = Math.max(0, Math.round(v));
     if (this.client && this.client.connected) {
@@ -140,9 +131,8 @@
     }
   };
 
-  // A carga é uma perturbação FÍSICA (segurar o eixo). O botão só marca o
-  // instante no gráfico — não publica nada (o firmware trata cmd ≠ "start" como stop).
-  DataEngine.prototype.setLoad = function (on) { /* no-op no MQTT */ };
+
+  DataEngine.prototype.setLoad = function (on) {};
 
   window.Fuzzy = Fuzzy;
   window.DataEngine = DataEngine;
