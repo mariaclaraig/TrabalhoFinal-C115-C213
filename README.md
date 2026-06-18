@@ -47,33 +47,6 @@ pio run --target upload
 pio device monitor
 ```
 
-## Configuração MQTT da apresentação
-
-Use o script `scripts/presentation-mqtt.ps1` para configurar rapidamente o firmware e o dashboard na rede usada durante a demonstração.
-
-Exemplo:
-
-```powershell
-.\scripts\presentation-mqtt.ps1 `
-  -BrokerHost "10.46.4.131" `
-  -MqttPort 1884 `
-  -WebSocketPort 9001 `
-  -WifiSsid "SUA_REDE" `
-  -WifiPass "SUA_SENHA"
-```
-
-O broker Mosquitto deve expor MQTT TCP para o ESP32 e WebSocket para o dashboard:
-
-```conf
-listener 1884
-protocol mqtt
-
-listener 9001
-protocol websockets
-
-allow_anonymous true
-```
-
 ## Tópicos MQTT
 
 | Tópico | Direção | Payload |

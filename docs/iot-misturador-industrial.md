@@ -120,14 +120,6 @@ mosquitto_pub -h localhost -p 1883 -t "motor/cmd" -m "start"
 mosquitto_pub -h localhost -p 1883 -t "motor/telemetry" -m "{\"t\":1,\"sp\":120,\"rpm\":118,\"err\":2,\"u\":47,\"mp\":0,\"ts\":0,\"ess\":2}"
 ```
 
-O firmware também possui modo de planta simulada via `USE_SIMULATED_PLANT`. Nesse modo, a velocidade é calculada por um modelo de primeira ordem:
-
-```cpp
-simRpm += (SIM_K * u_pct - simRpm) / SIM_TAU * dt_s;
-```
-
-Esse recurso permite testar o controle e a telemetria mesmo sem o motor físico.
-
 ## 6. Produtos existentes no mercado
 
 Soluções relacionadas já existem no mercado, principalmente em forma de misturadores industriais com controle de velocidade, painéis de controle, inversores de frequência, CLPs, sensores de potência e plataformas de monitoramento.
@@ -135,7 +127,6 @@ Soluções relacionadas já existem no mercado, principalmente em forma de mistu
 Exemplos de referências comerciais e técnicas:
 
 - A OEM Panels descreve painéis de controle para agitadores/misturadores com funções de ligar, desligar, controlar processo, monitorar status e alarmes: [Agitator Mixer Control Panels](https://www.oempanels.com/agitator-mixer-control-panels).
-- A WMProcess comercializa controladores de velocidade para misturadores usando VFDs/inversores para controle eletrônico de motores industriais: [Mixer Speed Controller](https://wmprocess.com/mixers-and-agitators/industrial-mixing-accessories/mixer-speed-controller/).
 - A Load Controls apresenta monitoramento de agitadores por sensor de potência para acompanhar mudanças de viscosidade e desvios de processo: [Agitators and Mixers: Profiling a Process](https://www.loadcontrols.com/industries-and-applications/agitators-and-mixers-profiling-a-process/).
 - A Ascon Tecnologic apresenta o AT MIXER como sistema de controle para misturadores e misturadores planetários: [AT MIXER](https://www.ascontecnologic.com/mixers-and-planetary-mixers/?lang=en).
 - Casos industriais de agitadores costumam combinar VFD e CLP para controle em malha fechada, como no exemplo da Consyst: [Closed-Loop Control Optimization for Industrial Agitators](https://consyst.biz/closed-loop-control-optimization-a-case-study-in-design-and-integration-of-industrial-agitator-system/).
