@@ -7,3 +7,4 @@
 .dont_commit/
 
 include/project_config.h
+dashboard/config.js

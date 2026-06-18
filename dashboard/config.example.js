@@ -1,0 +1,1 @@
+window.DASHBOARD_MQTT_URL = "ws://IP_DO_BROKER:9001";

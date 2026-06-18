@@ -4,7 +4,6 @@
 #include "../include/metrics.h"
 #include "../include/comms.h"
 
-
 volatile float g_setpoint = SP1;
 volatile bool  g_running  = true;
 static float u    = 0.0f;
@@ -12,10 +11,8 @@ static float ePrev = 0.0f;
 static float rpmFilt = 0.0f;
 static Metrics metrics;
 
-
 static volatile long encCount = 0;
 static void IRAM_ATTR onEncA() { encCount++; }
-
 
 #if USE_SIMULATED_PLANT
 static float simRpm = 0.0f;
@@ -26,7 +23,6 @@ static float plantStep(float u_pct, float dt_s) {
   return simRpm;
 }
 #endif
-
 
 static void readSerialSetpoint() {
   while (Serial.available()) {
@@ -41,14 +37,12 @@ void setup() {
   Serial.begin(115200);
   delay(300);
 
-
   pinMode(PIN_IN1, OUTPUT);
   pinMode(PIN_IN2, OUTPUT);
   digitalWrite(PIN_IN1, LOW);
   digitalWrite(PIN_IN2, HIGH);
   ledcSetup(PWM_CHANNEL, PWM_FREQ, PWM_RES_BITS);
   ledcAttachPin(PIN_ENA, PWM_CHANNEL);
-
 
   pinMode(PIN_ENC_A, INPUT_PULLUP);
   pinMode(PIN_ENC_B, INPUT_PULLUP);
@@ -72,13 +66,11 @@ void loop() {
   commsLoop();
   readSerialSetpoint();
 
-
   static unsigned long tPrev = 0;
   unsigned long now = millis();
   if (now - tPrev < (unsigned long)DT_MS) return;
   float dt = (now - tPrev) / 1000.0f;
   tPrev = now;
-
 
   float rpm;
 #if USE_SIMULATED_PLANT
@@ -92,11 +84,9 @@ void loop() {
 
   rpmFilt = RPM_FILTER_A * rpm + (1.0f - RPM_FILTER_A) * rpmFilt;
 
-
   float e  = g_setpoint - rpmFilt;
   float de = (e - ePrev) / dt;
   ePrev = e;
-
 
   float du = fuzzyController(e, de);
   u += du;
@@ -104,14 +94,11 @@ void loop() {
   if (u > 100.0f) u = 100.0f;
   if (!g_running) u = 0.0f;
 
-
   int duty = (int)(u * PWM_MAX_DUTY / 100.0f + 0.5f);
   ledcWrite(PWM_CHANNEL, duty);
 
-
   float tsec = now / 1000.0f;
   metricsUpdate(&metrics, g_setpoint, rpmFilt, tsec);
-
 
   Serial.printf("SP:%.1f,RPM:%.1f,u:%.1f,mp:%.1f,ts:%.1f,ess:%.1f\n",
                 g_setpoint, rpmFilt, u, metrics.mp, metrics.ts, metrics.ess);

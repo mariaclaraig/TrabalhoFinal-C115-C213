@@ -3,7 +3,6 @@ const { useState, useEffect, useRef, useCallback } = React;
 const SP_PRESETS = [60, 120, 180];
 const MAX_SAMPLES = 800;
 
-
 const CFG = {
   accent: "#f5a524",
   trace: "#36d6c3",
@@ -33,6 +32,7 @@ const STATUS_MAP = {
 
 function App() {
   const t = CFG;
+  const brokerUrl = window.DASHBOARD_MQTT_URL || "ws://localhost:9001";
 
   const [sp, setSp] = useState(120);
   const [running, setRunning] = useState(true);
@@ -48,9 +48,8 @@ function App() {
   const engineRef = useRef(null);
   const prevErrRef = useRef(0);
 
-
   useEffect(() => {
-    const eng = new window.DataEngine({ url: "ws://localhost:9001" });
+    const eng = new window.DataEngine({ url: brokerUrl });
     engineRef.current = eng;
     window.dashboardEngine = eng;
     eng.onStatus = (s) => setStatus(s);
@@ -69,8 +68,7 @@ function App() {
     };
     eng.start();
     return () => { clearInterval(eng._statusTimer); if (eng.client) eng.client.end(true); };
-  }, []);
-
+  }, [brokerUrl]);
 
   const applySp = useCallback((v) => {
     v = Math.max(0, Math.round(v));
@@ -97,13 +95,11 @@ function App() {
     });
   }, []);
 
-
   const onTarget = sp > 0 && hasData && Math.abs(latest.err) <= sp * 0.02 && running;
   const saturated = hasData && latest.u >= 99;
   const stView = STATUS_MAP[status] || STATUS_MAP.offline;
 
   const fmt = (v, d) => (hasData ? (d ? v.toFixed(d) : Math.round(v)) : "—");
-
 
   useEffect(() => {
     document.documentElement.style.setProperty("--amber", t.accent);
@@ -126,11 +122,10 @@ function App() {
           <span className="dot"></span>
           <div>
             <div className="txt">{stView.txt}</div>
-            <div className="url">broker · ws://localhost:9001</div>
+            <div className="url">broker · {brokerUrl}</div>
           </div>
         </div>
       </header>
-
 
       <div className="main">
 
@@ -180,7 +175,6 @@ function App() {
           </div>
         </div>
 
-
         <div className="col col-chart">
           <div className="card framed">
             <div className="card-h">
@@ -198,7 +192,6 @@ function App() {
             </div>
           </div>
         </div>
-
 
         <div className="col">
           <div className="card framed">
@@ -251,7 +244,6 @@ function App() {
           )}
         </div>
       </div>
-
 
       {t.showFuzzy && (
         <div className="card framed" style={{ padding: "16px 16px 18px" }}>

@@ -3,7 +3,7 @@
 /**
  * @file comms.h
  * @brief Interface da camada de comunicação MQTT.
- */
+*/
 
 /**
  * @brief Setup da comunicação Wi-Fi e MQTT. 
