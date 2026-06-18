@@ -23,7 +23,6 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
     const xOf = (wall) => padL + ((wall - tMin) / (windowSec * 1000)) * plotW;
     const yOf = (v) => padT + plotH - (Math.max(0, Math.min(ymax, v)) / ymax) * plotH;
 
-
     ctx.strokeStyle = "rgba(150,175,205,0.10)";
     ctx.fillStyle = "rgba(130,148,168,0.85)";
     ctx.lineWidth = 1;
@@ -46,7 +45,6 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
     }
 
     const vis = samples.filter((s) => s.wall >= tMin - 200);
-
 
     (events || []).forEach((ev) => {
       if (ev.wall < tMin) return;
@@ -73,7 +71,6 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
         ctx.fillRect(padL, yb1, plotW, yb2 - yb1);
       }
 
-
       ctx.strokeStyle = "#f5a524";
       ctx.lineWidth = 2;
       ctx.setLineDash([7, 5]);
@@ -85,7 +82,6 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
       });
       ctx.stroke();
       ctx.setLineDash([]);
-
 
       const grad = ctx.createLinearGradient(0, padT, 0, padT + plotH);
       grad.addColorStop(0, "rgba(54,214,195,0.28)");
@@ -101,7 +97,6 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
       ctx.closePath();
       ctx.fillStyle = grad; ctx.fill();
 
-
       ctx.strokeStyle = "#5fe9d8";
       ctx.lineWidth = 2.4;
       ctx.lineJoin = "round";
@@ -114,7 +109,6 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
       });
       ctx.stroke();
       ctx.shadowBlur = 0;
-
 
       const last = vis[vis.length - 1];
       ctx.fillStyle = "#5fe9d8";

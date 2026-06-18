@@ -1,7 +1,10 @@
 #pragma once
 
-
-
+/**
+ * @file config.h
+ * @brief Configurações gerais do projeto, incluindo pinos, parâmetros de controle e
+ * métricas. Inclui também as configurações de rede e MQTT a partir de project_config.h.
+*/
 
 #define PIN_IN1   17
 #define PIN_IN2    5
@@ -34,7 +37,6 @@
 #define METRICS_AVG_N  20
 
 #include "project_config.h"
-
 
 #define TOP_SETPOINT   "motor/setpoint"
 #define TOP_CMD        "motor/cmd"
