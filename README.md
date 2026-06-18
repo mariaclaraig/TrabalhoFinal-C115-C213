@@ -1,56 +1,95 @@
-# TrabalhoFinal-C115-C213
-Repositório dedicado aos projetos de C115 (IoT) e C213 (Sistemas Embarcados).
+# Trabalho Final C115/C213
 
-Alunos:
+Repositório dos projetos finais de **C115 (IoT)** e **C213 (Sistemas Embarcados)**.
+
+O projeto implementa um **Misturador Industrial IoT** com controle fuzzy de velocidade em ESP32, comunicação MQTT e dashboard web para supervisão em tempo real.
+
+## Equipe
+
 - Christian Salles
 - Maria Clara Ignácio
 - Samuel Ralise
 
-## Script de apresentação MQTT
+## Documentação
 
-Use o script `scripts/presentation-mqtt.ps1` para configurar rapidamente o projeto na rede usada durante a apresentação.
+- [Documentação IoT - C115](docs/iot-misturador-industrial.md)
+- [Documentação Embarcados - C213](docs/embarcados-controle-fuzzy.md)
+- [Índice da documentação](docs/README.md)
 
-Ele gera os arquivos locais:
+## Estrutura do projeto
 
-- `include/project_config.h`: usado pelo firmware do ESP32.
-- `dashboard/config.js`: usado pelo dashboard web.
+```text
+.
+├── dashboard/                 # Dashboard web SCADA com MQTT via WebSocket
+├── docs/                      # Documentação dos trabalhos C115 e C213
+├── include/                   # Headers e configurações do firmware
+├── scripts/                   # Scripts de apoio para apresentação
+├── src/                       # Firmware ESP32 em C/C++
+├── platformio.ini             # Configuração PlatformIO
+└── README.md
+```
 
-Esses arquivos ficam fora do Git.
+## Firmware ESP32
 
-Exemplo de uso:
+O firmware roda em um **ESP32 DevKit v1** usando Arduino/PlatformIO. Ele lê o encoder Hall do motor, calcula a velocidade em RPM, executa o controlador fuzzy incremental, aciona o motor por PWM e publica telemetria via MQTT.
+
+Dependência principal:
+
+```ini
+knolleary/PubSubClient@^2.8
+```
+
+Para compilar e gravar:
 
 ```powershell
-.\scripts\presentation-mqtt.ps1 `
-  -BrokerHost "10.46.4.131" `
-  -MqttPort 1884 `
-  -WebSocketPort 9001 `
-  -WifiSsid "SUA_REDE" `
-  -WifiPass "SUA_SENHA"
+pio run
+pio run --target upload
+pio device monitor
 ```
 
-O Mosquitto precisa estar com as duas portas ativas:
+## Tópicos MQTT
 
-```conf
-listener 1884
-protocol mqtt
+| Tópico | Direção | Payload |
+|---|---|---|
+| `motor/telemetry` | ESP32 -> dashboard/MQTTX | JSON com `t`, `sp`, `rpm`, `err`, `u`, `mp`, `ts`, `ess` |
+| `motor/setpoint` | dashboard/MQTTX -> ESP32 | número em RPM, por exemplo `120` |
+| `motor/cmd` | dashboard/MQTTX -> ESP32 | `start` ou `stop` |
 
-listener 9001
-protocol websockets
+## Demonstração com MQTTX
 
-allow_anonymous true
-```
-
-Para demonstrar no MQTTX:
+No MQTTX, crie uma conexão com:
 
 - Protocol: `MQTT`
 - Host: mesmo valor usado em `-BrokerHost`
 - Port: mesmo valor usado em `-MqttPort`
-- Subscribe: `motor/telemetry`
-- Publish: `motor/setpoint` ou `motor/cmd`
+- Client ID: `mqttx-demo`
 
-Para demonstrar no dashboard:
+Assine `motor/telemetry` para acompanhar a telemetria. Publique em `motor/setpoint` para mudar a velocidade desejada e em `motor/cmd` para iniciar ou parar a atuação.
 
-- Abra `dashboard/index.html`.
-- O dashboard usa `ws://BROKER_HOST:WEBSOCKET_PORT`, gerado em `dashboard/config.js`.
+Exemplos de mensagens:
 
-Se alterar Wi-Fi, IP do broker ou porta MQTT do ESP32, rode o script novamente e regrave o firmware. Se mudar apenas a porta WebSocket do dashboard, basta rodar o script e recarregar a página.
+```text
+motor/setpoint -> 60
+motor/setpoint -> 120
+motor/setpoint -> 180
+motor/cmd      -> start
+motor/cmd      -> stop
+```
+
+## Dashboard web
+
+O dashboard fica em `dashboard/` e apresenta tacômetro, gráfico temporal, set point, comando start/stop, KPIs de controle e painel visual da lógica fuzzy.
+
+Para abrir:
+
+```powershell
+python -m http.server 8080 --directory dashboard
+```
+
+Depois acesse:
+
+```text
+http://localhost:8080
+```
+
+O dashboard consome a URL MQTT WebSocket gerada pelo script de apresentação.
