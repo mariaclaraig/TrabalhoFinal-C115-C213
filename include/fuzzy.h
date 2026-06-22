@@ -6,10 +6,10 @@
 */
 
 /**
- * @brief Controlador fuzzy que recebe o erro e variação do erro.
+ * @brief Controlador fuzzy incremental que recebe erro e variação do erro.
  * 
  * @param e Erro atual (RPM)
  * @param de Variação do erro (RPM/s)
- * @return Sinal de controle (PWM %)
+ * @return Incremento do PWM em pontos percentuais por ciclo
  */
 float fuzzyController(float e, float de);

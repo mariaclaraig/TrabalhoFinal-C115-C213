@@ -1,7 +1,9 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "../include/config.h"
 #include "../include/comms.h"
 
@@ -19,7 +21,18 @@ static void onMessage(char* topic, byte* payload, unsigned int len) {
   Serial.printf("[MQTT] recebido %s = %s\n", topic, msg.c_str());
 
   if (String(topic) == TOP_SETPOINT) {
-    g_setpoint = msg.toFloat();
+    msg.trim();
+    char* end = nullptr;
+    const char* start = msg.c_str();
+    float requested = strtof(start, &end);
+
+    if (end == start || *end != '\0' || !isfinite(requested)) {
+      Serial.printf("[MQTT] setpoint invalido ignorado: %s\n", msg.c_str());
+      return;
+    }
+
+    g_setpoint = fmaxf(SETPOINT_MIN, fminf(SETPOINT_MAX, requested));
+    Serial.printf("[MQTT] setpoint aplicado: %.1f RPM\n", g_setpoint);
   } else if (String(topic) == TOP_CMD) {
     g_running = (msg == "start");
   }
@@ -70,13 +83,16 @@ void commsLoop() { reconnect(); mqtt.loop(); }
 
 bool commsConnected() { return mqtt.connected(); }
 
-void publishTelemetry(float t, float sp, float rpm, float err, float u,
+void publishTelemetry(float t, float sp, float rpm, float err, float de,
+                      float du, float u,
                       float mp, float ts, float ess) {
   if (!mqtt.connected()) return;
-  char buf[192];
+  char buf[224];
   int n = snprintf(buf, sizeof(buf),
-    "{\"t\":%.1f,\"sp\":%.1f,\"rpm\":%.1f,\"err\":%.1f,\"u\":%.1f,"
+    "{\"t\":%.1f,\"sp\":%.1f,\"rpm\":%.1f,\"err\":%.1f,"
+    "\"de\":%.1f,\"du\":%.2f,\"u\":%.1f,"
     "\"mp\":%.1f,\"ts\":%.1f,\"ess\":%.1f}",
-    t, sp, rpm, err, u, mp, ts, ess);
-  if (n > 0) mqtt.publish(TOP_TELEMETRY, (const uint8_t*)buf, (unsigned int)n, false);
+    t, sp, rpm, err, de, du, u, mp, ts, ess);
+  if (n > 0 && n < (int)sizeof(buf))
+    mqtt.publish(TOP_TELEMETRY, (const uint8_t*)buf, (unsigned int)n, false);
 }

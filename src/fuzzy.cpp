@@ -1,7 +1,12 @@
 #include <math.h>
+#include "../include/config.h"
 #include "../include/fuzzy.h"
 
 typedef struct { float a, b, c, d; } MF;
+
+static float clampValue(float value, float minValue, float maxValue) {
+  return fmaxf(minValue, fminf(maxValue, value));
+}
 
 static float mfEval(MF m, float x) {
   float rise = (m.b > m.a) ? (x - m.a) / (m.b - m.a) : (x >= m.a ? 1.0f : 0.0f);
@@ -13,18 +18,27 @@ static float mfEval(MF m, float x) {
 }
 
 static const MF eMF[5] = {
-  {-200,-200,-200,-100}, {-200,-100,-100,   0}, {-100,   0,   0, 100},
-  {   0, 100, 100, 200}, { 100, 200, 200, 200}
+  {-FUZZY_E_MAX,-FUZZY_E_MAX,-FUZZY_E_MAX,-FUZZY_E_MAX / 2},
+  {-FUZZY_E_MAX,-FUZZY_E_MAX / 2,-FUZZY_E_MAX / 2,0},
+  {-FUZZY_E_MAX / 2,0,0,FUZZY_E_MAX / 2},
+  {0,FUZZY_E_MAX / 2,FUZZY_E_MAX / 2,FUZZY_E_MAX},
+  {FUZZY_E_MAX / 2,FUZZY_E_MAX,FUZZY_E_MAX,FUZZY_E_MAX}
 };
 
 static const MF deMF[5] = {
-  {-500,-500,-500,-250}, {-500,-250,-250,   0}, {-250,   0,   0, 250},
-  {   0, 250, 250, 500}, { 250, 500, 500, 500}
+  {-FUZZY_DE_MAX,-FUZZY_DE_MAX,-FUZZY_DE_MAX,-FUZZY_DE_MAX / 2},
+  {-FUZZY_DE_MAX,-FUZZY_DE_MAX / 2,-FUZZY_DE_MAX / 2,0},
+  {-FUZZY_DE_MAX / 2,0,0,FUZZY_DE_MAX / 2},
+  {0,FUZZY_DE_MAX / 2,FUZZY_DE_MAX / 2,FUZZY_DE_MAX},
+  {FUZZY_DE_MAX / 2,FUZZY_DE_MAX,FUZZY_DE_MAX,FUZZY_DE_MAX}
 };
 
 static const MF uMF[5] = {
-  {-10,-10,-10, -5}, {-10, -5, -5,  0}, { -5,  0,  0,  5},
-  {  0,  5,  5, 10}, {  5, 10, 10, 10}
+  {-FUZZY_DU_MAX,-FUZZY_DU_MAX,-FUZZY_DU_MAX,-FUZZY_DU_MAX / 2},
+  {-FUZZY_DU_MAX,-FUZZY_DU_MAX / 2,-FUZZY_DU_MAX / 2,0},
+  {-FUZZY_DU_MAX / 2,0,0,FUZZY_DU_MAX / 2},
+  {0,FUZZY_DU_MAX / 2,FUZZY_DU_MAX / 2,FUZZY_DU_MAX},
+  {FUZZY_DU_MAX / 2,FUZZY_DU_MAX,FUZZY_DU_MAX,FUZZY_DU_MAX}
 };
 
 typedef struct { int e, de, out; } Rule;
@@ -35,6 +49,9 @@ static void buildRules() {
   if (NUM_RULES) return;
   for (int ie = 0; ie < 5; ie++) {
     for (int id = 0; id < 5; id++) {
+      // Matriz propria: soma os indices linguisticos centrados e satura
+      // em NG..PG. Ela e mais agressiva quando erro e tendencia apontam
+      // na mesma direcao.
       int s = (ie - 2) + (id - 2);
       if (s < -2) s = -2;
       if (s >  2) s =  2;
@@ -45,6 +62,9 @@ static void buildRules() {
 
 float fuzzyController(float e, float de) {
   buildRules();
+
+  e = clampValue(e, -FUZZY_E_MAX, FUZZY_E_MAX);
+  de = clampValue(de, -FUZZY_DE_MAX, FUZZY_DE_MAX);
 
   float muE[5], muDe[5];
   for (int i = 0; i < 5; i++) {
@@ -57,7 +77,7 @@ float fuzzyController(float e, float de) {
     w[r] = fminf(muE[rules[r].e], muDe[rules[r].de]);
 
   const int   N    = 101;
-  const float xmin = -10.0f, xmax = 10.0f;
+  const float xmin = -FUZZY_DU_MAX, xmax = FUZZY_DU_MAX;
   float num = 0.0f, den = 0.0f;
 
   for (int k = 0; k < N; k++) {

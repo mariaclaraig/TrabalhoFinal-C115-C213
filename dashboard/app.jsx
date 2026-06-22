@@ -2,6 +2,7 @@ const { useState, useEffect, useRef, useCallback } = React;
 
 const SP_PRESETS = [60, 120, 180];
 const MAX_SAMPLES = 800;
+const RPM_MAX = window.Fuzzy.RPM_MAX;
 
 const CFG = {
   accent: "#f5a524",
@@ -40,24 +41,21 @@ function App() {
   const [status, setStatus] = useState("offline");
   const [hasData, setHasData] = useState(false);
 
-  const [latest, setLatest] = useState({ rpm: 0, sp: 120, err: 0, u: 0, derr: 0 });
+  const [latest, setLatest] = useState({ rpm: 0, sp: 120, err: 0, de: 0, du: 0, u: 0 });
   const [samples, setSamples] = useState([]);
   const [events, setEvents] = useState([]);
   const [kpi, setKpi] = useState({ tset: null, over: null, ess: null });
 
   const engineRef = useRef(null);
-  const prevErrRef = useRef(0);
-
   useEffect(() => {
     const eng = new window.DataEngine({ url: brokerUrl });
     engineRef.current = eng;
     window.dashboardEngine = eng;
     eng.onStatus = (s) => setStatus(s);
     eng.onSample = (smp) => {
-      const derr = smp.err - prevErrRef.current;
-      prevErrRef.current = smp.err;
       setHasData(true);
-      setLatest({ rpm: smp.rpm, sp: smp.sp, err: smp.err, u: smp.u, derr });
+      setSp(Math.max(0, Math.min(RPM_MAX, smp.sp)));
+      setLatest({ rpm: smp.rpm, sp: smp.sp, err: smp.err, de: smp.de, du: smp.du, u: smp.u });
       setSamples((prev) => {
         const next = prev.length >= MAX_SAMPLES ? prev.slice(prev.length - MAX_SAMPLES + 1) : prev.slice();
         next.push(smp);
@@ -71,7 +69,7 @@ function App() {
   }, [brokerUrl]);
 
   const applySp = useCallback((v) => {
-    v = Math.max(0, Math.round(v));
+    v = Math.max(0, Math.min(RPM_MAX, Math.round(v)));
     setSp(v);
     engineRef.current.setSetpoint(v);
     setEvents((prev) => [...prev.slice(-12), { wall: performance.now(), type: "sp", label: "SP " + v }]);
@@ -135,7 +133,7 @@ function App() {
               <span className="label">Velocidade do Eixo</span>
               <span className="tag">motor/telemetry</span>
             </div>
-            <Tachometer rpm={hasData ? latest.rpm : 0} sp={sp} max={240} onTarget={onTarget} />
+            <Tachometer rpm={hasData ? latest.rpm : 0} sp={sp} max={RPM_MAX} onTarget={onTarget} />
           </div>
 
           <div className="card framed">
@@ -168,8 +166,8 @@ function App() {
                 <span className="lbl">Ajuste livre</span>
                 <span className="val">{sp} <span style={{ color: "var(--muted)", fontSize: 11 }}>rpm</span></span>
               </div>
-              <input className="rng" type="range" min="0" max="240" step="1" value={sp}
-                     style={{ "--fill": (sp / 240 * 100) + "%" }}
+              <input className="rng" type="range" min="0" max={RPM_MAX} step="1" value={sp}
+                     style={{ "--fill": (sp / RPM_MAX * 100) + "%" }}
                      onChange={(e) => applySp(+e.target.value)} />
             </div>
           </div>
@@ -183,7 +181,7 @@ function App() {
                 <span className="led"></span>{load ? "Carga aplicada" : "Aplicar carga"}
               </button>
             </div>
-            <ResponseChart samples={samples} events={events} ymax={240} windowSec={t.windowSec} />
+            <ResponseChart samples={samples} events={events} ymax={RPM_MAX} windowSec={t.windowSec} />
             <div className="chart-legend" style={{ marginTop: 10 }}>
               <span><i style={{ borderColor: "var(--cyan-2)" }}></i>Velocidade (rpm)</span>
               <span><i className="dash" style={{ borderColor: "var(--amber)" }}></i>Set point</span>
@@ -249,9 +247,11 @@ function App() {
         <div className="card framed" style={{ padding: "16px 16px 18px" }}>
           <div className="card-h" style={{ marginBottom: 14 }}>
             <span className="label" style={{ fontSize: 12 }}>Lógica Fuzzy · O Controlador "Pensando"</span>
-            <span className="tag">e &amp; Δe → termo linguístico → Δu</span>
           </div>
-          <FuzzyPanel err={hasData ? latest.err : 0} derr={hasData ? latest.derr : 0} />
+          <FuzzyPanel
+            err={hasData ? latest.err : 0}
+            de={hasData ? latest.de : 0}
+          />
         </div>
       )}
     </div>
