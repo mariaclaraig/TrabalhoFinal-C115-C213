@@ -122,8 +122,6 @@
   };
 
 
-  DataEngine.prototype.setLoad = function (on) {};
-
   window.Fuzzy = Fuzzy;
   window.DataEngine = DataEngine;
 })();

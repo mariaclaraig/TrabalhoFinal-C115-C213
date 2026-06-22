@@ -37,7 +37,6 @@ function App() {
 
   const [sp, setSp] = useState(120);
   const [running, setRunning] = useState(true);
-  const [load, setLoad] = useState(false);
   const [status, setStatus] = useState("offline");
   const [hasData, setHasData] = useState(false);
 
@@ -80,16 +79,6 @@ function App() {
       const nr = !r;
       engineRef.current.setRunning(nr);
       return nr;
-    });
-  }, []);
-
-  const toggleLoad = useCallback(() => {
-    setLoad((l) => {
-      const nl = !l;
-      engineRef.current.setLoad(nl);
-
-      setEvents((prev) => [...prev.slice(-12), { wall: performance.now(), type: "load", label: nl ? "CARGA" : "ALÍVIO" }]);
-      return nl;
     });
   }, []);
 
@@ -177,15 +166,11 @@ function App() {
           <div className="card framed">
             <div className="card-h">
               <span className="label">Resposta Temporal · RPM × t</span>
-              <button className={"load-btn" + (load ? " on" : "")} onClick={toggleLoad}>
-                <span className="led"></span>{load ? "Carga aplicada" : "Aplicar carga"}
-              </button>
             </div>
             <ResponseChart samples={samples} events={events} ymax={RPM_MAX} windowSec={t.windowSec} />
             <div className="chart-legend" style={{ marginTop: 10 }}>
               <span><i style={{ borderColor: "var(--cyan-2)" }}></i>Velocidade (rpm)</span>
               <span><i className="dash" style={{ borderColor: "var(--amber)" }}></i>Set point</span>
-              <span><i className="dash" style={{ borderColor: "var(--red)" }}></i>Perturbação</span>
               <span style={{ color: "var(--muted-2)" }}>Banda ±2%</span>
             </div>
           </div>
