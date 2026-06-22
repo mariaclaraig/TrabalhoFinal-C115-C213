@@ -14,6 +14,10 @@ static Metrics metrics;
 static volatile long encCount = 0;
 static void IRAM_ATTR onEncA() { encCount++; }
 
+static float clampValue(float value, float minValue, float maxValue) {
+  return fmaxf(minValue, fminf(maxValue, value));
+}
+
 #if USE_SIMULATED_PLANT
 static float simRpm = 0.0f;
 
@@ -84,10 +88,11 @@ void loop() {
 
   rpmFilt = RPM_FILTER_A * rpm + (1.0f - RPM_FILTER_A) * rpmFilt;
 
-  float e  = g_setpoint - rpmFilt;
-  float de = (e - ePrev) / dt;
+  float e = g_setpoint - rpmFilt;
+  float deRaw = (e - ePrev) / dt;
   ePrev = e;
 
+  float de = clampValue(deRaw, -FUZZY_DE_MAX, FUZZY_DE_MAX);
   float du = fuzzyController(e, de);
   u += du;
   if (u < 0.0f)   u = 0.0f;
@@ -100,8 +105,10 @@ void loop() {
   float tsec = now / 1000.0f;
   metricsUpdate(&metrics, g_setpoint, rpmFilt, tsec);
 
-  Serial.printf("SP:%.1f,RPM:%.1f,u:%.1f,mp:%.1f,ts:%.1f,ess:%.1f\n",
-                g_setpoint, rpmFilt, u, metrics.mp, metrics.ts, metrics.ess);
-  publishTelemetry(tsec, g_setpoint, rpmFilt, e, u,
+  Serial.printf("SP:%.1f,RPM:%.1f,e:%.1f,de:%.1f,du:%.1f,u:%.1f,"
+                "mp:%.1f,ts:%.1f,ess:%.1f\n",
+                g_setpoint, rpmFilt, e, de, du, u,
+                metrics.mp, metrics.ts, metrics.ess);
+  publishTelemetry(tsec, g_setpoint, rpmFilt, e, de, du, u,
                    metrics.mp, metrics.ts, metrics.ess);
 }

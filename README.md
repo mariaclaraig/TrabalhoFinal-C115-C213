@@ -51,7 +51,7 @@ pio device monitor
 
 | Tópico | Direção | Payload |
 |---|---|---|
-| `motor/telemetry` | ESP32 -> dashboard/MQTTX | JSON com `t`, `sp`, `rpm`, `err`, `u`, `mp`, `ts`, `ess` |
+| `motor/telemetry` | ESP32 -> dashboard/MQTTX | JSON com `t`, `sp`, `rpm`, `err`, `de`, `du`, `u`, `mp`, `ts`, `ess` |
 | `motor/setpoint` | dashboard/MQTTX -> ESP32 | número em RPM, por exemplo `120` |
 | `motor/cmd` | dashboard/MQTTX -> ESP32 | `start` ou `stop` |
 

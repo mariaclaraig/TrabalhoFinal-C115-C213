@@ -29,10 +29,13 @@ bool commsConnected();
  * @param sp Set point atual (RPM)
  * @param rpm RPM atual
  * @param err Erro atual (RPM)
+ * @param de Variação do erro usada pelo fuzzy (RPM/s)
+ * @param du Incremento de PWM calculado pelo fuzzy (% por ciclo)
  * @param u Sinal de controle atual (%)
  * @param mp Sobressinal (%)
  * @param ts Tempo de acomodação (s)
  * @param ess Erro em regime (RPM)
  */
-void publishTelemetry(float t, float sp, float rpm, float err, float u,
+void publishTelemetry(float t, float sp, float rpm, float err, float de,
+                      float du, float u,
                       float mp, float ts, float ess);

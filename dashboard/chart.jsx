@@ -51,12 +51,11 @@ function ResponseChart({ samples, events, ymax = 240, windowSec = 40 }) {
       const x = xOf(ev.wall);
       ctx.save();
       ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = ev.type === "load" ? "rgba(255,84,104,0.7)" : "rgba(245,165,36,0.55)";
+      ctx.strokeStyle = "rgba(245,165,36,0.55)";
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + plotH); ctx.stroke();
       ctx.restore();
-      ctx.fillStyle = ev.type === "load" ? "var(--red-2)" : "rgba(245,165,36,0.9)";
-      ctx.fillStyle = ev.type === "load" ? "#ff7a89" : "#ffc04d";
+      ctx.fillStyle = "#ffc04d";
       ctx.font = "9px 'JetBrains Mono', monospace";
       ctx.textAlign = "left"; ctx.textBaseline = "top";
       ctx.fillText(ev.label, x + 4, padT + 3);

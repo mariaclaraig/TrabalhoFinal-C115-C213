@@ -5,6 +5,7 @@
 
   const TERMS = ["NG", "NP", "ZE", "PP", "PG"];
   const CENTERS = [-1, -0.5, 0, 0.5, 1];
+  const RPM_MAX = 200;
 
   function memberships(xnorm) {
     const x = Math.max(-1, Math.min(1, xnorm));
@@ -22,25 +23,12 @@
     return Math.max(-2, Math.min(2, s)) + 2;
   }
 
-  function defuzz(en, den) {
-    const me = memberships(en);
-    const mde = memberships(den);
-    let num = 0, denw = 0;
-    for (let i = 0; i < 5; i++) {
-      for (let j = 0; j < 5; j++) {
-        const w = Math.min(me[i], mde[j]);
-        if (w <= 0) continue;
-        num += w * CENTERS[ruleOut(i, j)];
-        denw += w;
-      }
-    }
-    return denw > 0 ? num / denw : 0;
-  }
-
   const Fuzzy = {
-    TERMS, CENTERS, memberships, ruleOut, defuzz,
-    SCALE_E: 200,
-    SCALE_DE: 50,
+    TERMS, CENTERS, memberships, ruleOut,
+    RPM_MAX,
+    SCALE_E: RPM_MAX,
+    SCALE_DE: 500,
+    SCALE_DU: 10,
   };
 
 
@@ -103,6 +91,8 @@
           sp: m.sp,
           rpm: m.rpm,
           err: m.err != null ? m.err : (m.sp - m.rpm),
+          de: m.de != null ? m.de : 0,
+          du: m.du != null ? m.du : 0,
           u: m.u,
           mp: m.mp != null ? m.mp : null,
           ts: m.ts != null ? m.ts : null,
@@ -119,7 +109,7 @@
 
 
   DataEngine.prototype.setSetpoint = function (v) {
-    v = Math.max(0, Math.round(v));
+    v = Math.max(0, Math.min(RPM_MAX, Math.round(v)));
     if (this.client && this.client.connected) {
       this.client.publish(this.topics.setpoint, String(v), { retain: true });
     }
@@ -131,8 +121,6 @@
     }
   };
 
-
-  DataEngine.prototype.setLoad = function (on) {};
 
   window.Fuzzy = Fuzzy;
   window.DataEngine = DataEngine;

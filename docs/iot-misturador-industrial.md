@@ -60,6 +60,8 @@ Exemplo de telemetria:
   "sp": 120.0,
   "rpm": 116.8,
   "err": 3.2,
+  "de": -8.4,
+  "du": 0.65,
   "u": 64.5,
   "mp": 4.1,
   "ts": 2.8,
@@ -73,6 +75,8 @@ Campos:
 - `sp`: set point atual em RPM;
 - `rpm`: velocidade medida/filtrada;
 - `err`: erro entre set point e RPM;
+- `de`: variação do erro usada pelo controlador, em RPM/s;
+- `du`: incremento de PWM calculado pelo fuzzy, em percentual por ciclo;
 - `u`: atuação do controlador em percentual de PWM;
 - `mp`: sobressinal percentual;
 - `ts`: tempo de acomodação;
@@ -117,7 +121,7 @@ Em outro terminal:
 ```powershell
 mosquitto_pub -h localhost -p 1883 -t "motor/setpoint" -m "120"
 mosquitto_pub -h localhost -p 1883 -t "motor/cmd" -m "start"
-mosquitto_pub -h localhost -p 1883 -t "motor/telemetry" -m "{\"t\":1,\"sp\":120,\"rpm\":118,\"err\":2,\"u\":47,\"mp\":0,\"ts\":0,\"ess\":2}"
+mosquitto_pub -h localhost -p 1883 -t "motor/telemetry" -m "{\"t\":1,\"sp\":120,\"rpm\":118,\"err\":2,\"de\":-5,\"du\":0.4,\"u\":47,\"mp\":0,\"ts\":0,\"ess\":2}"
 ```
 
 ## 6. Produtos existentes no mercado

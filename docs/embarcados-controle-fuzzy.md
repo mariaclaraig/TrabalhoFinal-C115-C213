@@ -129,7 +129,7 @@ O controlador está em `src/fuzzy.cpp` e segue o modelo Mamdani.
 Entradas:
 
 - `e = setpoint - rpmFilt`;
-- `de = (e - ePrev) / dt`.
+- `de = (e - ePrev) / dt`, saturado em `-500` a `500` RPM/s antes da fuzzificação.
 
 Saída:
 
@@ -161,6 +161,10 @@ Universos implementados:
 | Erro `e` | `-200` a `200` RPM |
 | Variação `de` | `-500` a `500` RPM/s |
 | Saída `du` | `-10` a `10` % |
+
+Entradas que ultrapassam os universos são saturadas nos limites. Assim, os
+termos extremos continuam ativos durante partidas, mudanças bruscas de setpoint
+e picos de medição.
 
 ## 8. Funções de pertinência
 
@@ -243,6 +247,9 @@ Funções:
 - `commsConnected()`: informa estado da conexão;
 - `publishTelemetry()`: publica o JSON de telemetria.
 
+O payload inclui `de` e `du`, exatamente como calculados no ciclo de controle.
+O dashboard usa esses campos em vez de recalcular o comportamento fuzzy.
+
 Tópicos:
 
 | Tópico | Uso no ESP32 |
@@ -299,7 +306,7 @@ O dashboard consome `motor/telemetry` e publica em `motor/setpoint` e `motor/cmd
 5. Enviar `start` em `motor/cmd`.
 6. Enviar `120` em `motor/setpoint`.
 
-Resultado esperado: o ESP32 publica telemetria com `sp`, `rpm`, `err`, `u`, `mp`, `ts` e `ess`.
+Resultado esperado: o ESP32 publica telemetria com `sp`, `rpm`, `err`, `de`, `du`, `u`, `mp`, `ts` e `ess`.
 
 ### Teste 2: set points
 
