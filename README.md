@@ -1,6 +1,6 @@
 # Trabalho Final C115/C213
 
-Repositório dos projetos finais de **C115 (IoT)** e **C213 (Sistemas Embarcados)**.
+Repositório dos projetos finais de **C115 (IoT)** e **C213 (Sistemas Embarcados)***.
 
 O projeto implementa um **Misturador Industrial IoT** com controle fuzzy de velocidade em ESP32, comunicação MQTT e dashboard web para supervisão em tempo real.
 
@@ -14,6 +14,8 @@ O projeto implementa um **Misturador Industrial IoT** com controle fuzzy de velo
 
 - [Documentação IoT - C115](docs/iot-misturador-industrial.md)
 - [Documentação Embarcados - C213](docs/embarcados-controle-fuzzy.md)
+- [Relatório técnico em PDF](docs/Relatorio_Tecnico_C213_Misturador_Fuzzy.pdf)
+- [Apresentação C213](docs/Apresenta%C3%A7%C3%A3oC213.pptx)
 - [Índice da documentação](docs/README.md)
 
 ## Estrutura do projeto
@@ -21,7 +23,7 @@ O projeto implementa um **Misturador Industrial IoT** com controle fuzzy de velo
 ```text
 .
 ├── dashboard/                 # Dashboard web SCADA com MQTT via WebSocket
-├── docs/                      # Documentação dos trabalhos C115 e C213
+├── docs/                      # Documentação e entregas dos trabalhos C115 e C213
 ├── include/                   # Headers e configurações do firmware
 ├── scripts/                   # Scripts de apoio para apresentação
 ├── src/                       # Firmware ESP32 em C/C++
