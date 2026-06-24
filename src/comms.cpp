@@ -14,6 +14,7 @@ static WiFiClient   wifiClient;
 static PubSubClient mqtt(wifiClient);
 static unsigned long lastStatusLog = 0;
 
+// Callback chamado sempre que o ESP32 recebe comando MQTT do dashboard/MQTTX.
 static void onMessage(char* topic, byte* payload, unsigned int len) {
   String msg; msg.reserve(len);
   for (unsigned int i = 0; i < len; i++) msg += (char)payload[i];
@@ -22,6 +23,8 @@ static void onMessage(char* topic, byte* payload, unsigned int len) {
 
   if (String(topic) == TOP_SETPOINT) {
     msg.trim();
+
+    // Valida o payload numerico antes de alterar a referencia da malha.
     char* end = nullptr;
     const char* start = msg.c_str();
     float requested = strtof(start, &end);
@@ -34,11 +37,13 @@ static void onMessage(char* topic, byte* payload, unsigned int len) {
     g_setpoint = fmaxf(SETPOINT_MIN, fminf(SETPOINT_MAX, requested));
     Serial.printf("[MQTT] setpoint aplicado: %.1f RPM\n", g_setpoint);
   } else if (String(topic) == TOP_CMD) {
+    // Qualquer comando diferente de "start" deixa a atuacao parada por seguranca.
     g_running = (msg == "start");
   }
 }
 
 void commsSetup() {
+  // Configura Wi-Fi em modo estacao e prepara o cliente MQTT.
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   mqtt.setServer(MQTT_HOST, MQTT_PORT);
@@ -48,6 +53,8 @@ void commsSetup() {
 
 static void reconnect() {
   if (mqtt.connected()) return;
+
+  // Aguarda a rede Wi-Fi antes de tentar abrir sessao MQTT.
   if (WiFi.status() != WL_CONNECTED) {
     unsigned long now = millis();
     if (now - lastStatusLog >= 3000) {
@@ -68,6 +75,8 @@ static void reconnect() {
   unsigned long now = millis();
   if (now - last < 2000) return;
   last = now;
+
+  // Ao reconectar, refaz as assinaturas dos topicos de comando.
   if (mqtt.connect(MQTT_CLIENTID)) {
     Serial.printf("[MQTT] conectado como %s\n", MQTT_CLIENTID);
     mqtt.subscribe(TOP_SETPOINT, 1);
@@ -87,6 +96,8 @@ void publishTelemetry(float t, float sp, float rpm, float err, float de,
                       float du, float u,
                       float mp, float ts, float ess) {
   if (!mqtt.connected()) return;
+
+  // Payload compacto em JSON para reduzir trafego e facilitar leitura no dashboard.
   char buf[224];
   int n = snprintf(buf, sizeof(buf),
     "{\"t\":%.1f,\"sp\":%.1f,\"rpm\":%.1f,\"err\":%.1f,"

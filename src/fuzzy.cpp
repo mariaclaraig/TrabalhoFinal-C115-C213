@@ -2,6 +2,7 @@
 #include "../include/config.h"
 #include "../include/fuzzy.h"
 
+// Funcao de pertinencia trapezoidal/triangular definida por quatro pontos.
 typedef struct { float a, b, c, d; } MF;
 
 static float clampValue(float value, float minValue, float maxValue) {
@@ -9,6 +10,7 @@ static float clampValue(float value, float minValue, float maxValue) {
 }
 
 static float mfEval(MF m, float x) {
+  // Calcula o grau de pertinencia combinando as rampas de subida e descida.
   float rise = (m.b > m.a) ? (x - m.a) / (m.b - m.a) : (x >= m.a ? 1.0f : 0.0f);
   float fall = (m.d > m.c) ? (m.d - x) / (m.d - m.c) : (x <= m.d ? 1.0f : 0.0f);
   float mu = fminf(rise, fall);
@@ -17,6 +19,7 @@ static float mfEval(MF m, float x) {
   return mu;
 }
 
+// Conjuntos fuzzy da entrada erro e, normalizados pelo limite FUZZY_E_MAX.
 static const MF eMF[5] = {
   {-FUZZY_E_MAX,-FUZZY_E_MAX,-FUZZY_E_MAX,-FUZZY_E_MAX / 2},
   {-FUZZY_E_MAX,-FUZZY_E_MAX / 2,-FUZZY_E_MAX / 2,0},
@@ -25,6 +28,7 @@ static const MF eMF[5] = {
   {FUZZY_E_MAX / 2,FUZZY_E_MAX,FUZZY_E_MAX,FUZZY_E_MAX}
 };
 
+// Conjuntos fuzzy da entrada variacao do erro.
 static const MF deMF[5] = {
   {-FUZZY_DE_MAX,-FUZZY_DE_MAX,-FUZZY_DE_MAX,-FUZZY_DE_MAX / 2},
   {-FUZZY_DE_MAX,-FUZZY_DE_MAX / 2,-FUZZY_DE_MAX / 2,0},
@@ -33,6 +37,7 @@ static const MF deMF[5] = {
   {FUZZY_DE_MAX / 2,FUZZY_DE_MAX,FUZZY_DE_MAX,FUZZY_DE_MAX}
 };
 
+// Conjuntos fuzzy da saida incremental de PWM.
 static const MF uMF[5] = {
   {-FUZZY_DU_MAX,-FUZZY_DU_MAX,-FUZZY_DU_MAX,-FUZZY_DU_MAX / 2},
   {-FUZZY_DU_MAX,-FUZZY_DU_MAX / 2,-FUZZY_DU_MAX / 2,0},
@@ -63,15 +68,18 @@ static void buildRules() {
 float fuzzyController(float e, float de) {
   buildRules();
 
+  // Entradas fora do universo de discurso ficam saturadas nos extremos.
   e = clampValue(e, -FUZZY_E_MAX, FUZZY_E_MAX);
   de = clampValue(de, -FUZZY_DE_MAX, FUZZY_DE_MAX);
 
+  // Fuzzificacao das duas entradas.
   float muE[5], muDe[5];
   for (int i = 0; i < 5; i++) {
     muE[i]  = mfEval(eMF[i],  e);
     muDe[i] = mfEval(deMF[i], de);
   }
 
+  // Ativacao Mamdani por minimo entre erro e variacao do erro.
   float w[25];
   for (int r = 0; r < NUM_RULES; r++)
     w[r] = fminf(muE[rules[r].e], muDe[rules[r].de]);
@@ -80,6 +88,7 @@ float fuzzyController(float e, float de) {
   const float xmin = -FUZZY_DU_MAX, xmax = FUZZY_DU_MAX;
   float num = 0.0f, den = 0.0f;
 
+  // Defuzzificacao por centroide, agregando as regras por maximo.
   for (int k = 0; k < N; k++) {
     float x   = xmin + (xmax - xmin) * k / (N - 1);
     float agg = 0.0f;

@@ -4,6 +4,7 @@ const SP_PRESETS = [60, 120, 180];
 const MAX_SAMPLES = 800;
 const RPM_MAX = window.Fuzzy.RPM_MAX;
 
+// Configuracoes visuais e operacionais principais do dashboard.
 const CFG = {
   accent: "#f5a524",
   trace: "#36d6c3",
@@ -47,6 +48,7 @@ function App() {
 
   const engineRef = useRef(null);
   useEffect(() => {
+    // Cria a camada MQTT e registra callbacks para atualizar a interface em tempo real.
     const eng = new window.DataEngine({ url: brokerUrl });
     engineRef.current = eng;
     window.dashboardEngine = eng;
@@ -56,6 +58,7 @@ function App() {
       setSp(Math.max(0, Math.min(RPM_MAX, smp.sp)));
       setLatest({ rpm: smp.rpm, sp: smp.sp, err: smp.err, de: smp.de, du: smp.du, u: smp.u });
       setSamples((prev) => {
+        // Mantem apenas uma janela limitada de amostras para evitar crescimento indefinido.
         const next = prev.length >= MAX_SAMPLES ? prev.slice(prev.length - MAX_SAMPLES + 1) : prev.slice();
         next.push(smp);
         return next;
@@ -68,6 +71,7 @@ function App() {
   }, [brokerUrl]);
 
   const applySp = useCallback((v) => {
+    // Aplica o set point localmente e publica a referencia para o ESP32.
     v = Math.max(0, Math.min(RPM_MAX, Math.round(v)));
     setSp(v);
     engineRef.current.setSetpoint(v);
@@ -75,6 +79,7 @@ function App() {
   }, []);
 
   const toggleRun = useCallback(() => {
+    // Alterna o estado da atuacao e envia start/stop por MQTT.
     setRunning((r) => {
       const nr = !r;
       engineRef.current.setRunning(nr);
@@ -86,6 +91,7 @@ function App() {
   const saturated = hasData && latest.u >= 99;
   const stView = STATUS_MAP[status] || STATUS_MAP.offline;
 
+  // Exibe placeholders enquanto nenhuma telemetria foi recebida.
   const fmt = (v, d) => (hasData ? (d ? v.toFixed(d) : Math.round(v)) : "—");
 
   useEffect(() => {

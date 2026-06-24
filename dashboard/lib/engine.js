@@ -7,6 +7,7 @@
   const CENTERS = [-1, -0.5, 0, 0.5, 1];
   const RPM_MAX = 200;
 
+  // Calcula os graus de pertinencia usados no painel visual do controlador.
   function memberships(xnorm) {
     const x = Math.max(-1, Math.min(1, xnorm));
     return CENTERS.map((c, i) => {
@@ -18,6 +19,7 @@
     });
   }
 
+  // Replica no dashboard a mesma matriz de regras implementada no firmware.
   function ruleOut(eIdx, deIdx) {
     const s = (eIdx - 2) + (deIdx - 2);
     return Math.max(-2, Math.min(2, s)) + 2;
@@ -49,12 +51,14 @@
   }
 
   DataEngine.prototype.start = function () {
+    // Inicia a conexao MQTT e atualiza periodicamente o estado mostrado na tela.
     this._connectMqtt();
 
     this._statusTimer = setInterval(() => this._emitStatus(), 800);
   };
 
   DataEngine.prototype._emitStatus = function () {
+    // Diferencia conexao ativa, conexao sem telemetria recente e modo offline.
     let s;
     if (this._connected && performance.now() - this._lastMsg < 3000) s = "connected";
     else if (this._connected) s = "connected-idle";
@@ -66,6 +70,7 @@
   DataEngine.prototype._connectMqtt = function () {
     if (typeof mqtt === "undefined") { this._emitStatus(); return; }
     try {
+      // O dashboard se conecta ao broker por WebSocket para rodar direto no navegador.
       const client = mqtt.connect(this.url, {
         reconnectPeriod: 2500,
         connectTimeout: 4000,
@@ -86,6 +91,8 @@
         let m;
         try { m = JSON.parse(payload.toString()); } catch (e) { return; }
         this._lastMsg = performance.now();
+
+        // Normaliza a telemetria recebida antes de entregar ao React.
         const sample = {
           t: m.t,
           sp: m.sp,
@@ -109,6 +116,7 @@
 
 
   DataEngine.prototype.setSetpoint = function (v) {
+    // Publica a nova referencia em RPM no mesmo topico assinado pelo ESP32.
     v = Math.max(0, Math.min(RPM_MAX, Math.round(v)));
     if (this.client && this.client.connected) {
       this.client.publish(this.topics.setpoint, String(v), { retain: true });
@@ -116,6 +124,7 @@
   };
 
   DataEngine.prototype.setRunning = function (on) {
+    // Envia comando simples para habilitar ou parar a atuacao do motor.
     if (this.client && this.client.connected) {
       this.client.publish(this.topics.cmd, on ? "start" : "stop");
     }

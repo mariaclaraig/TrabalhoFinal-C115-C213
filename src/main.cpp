@@ -11,6 +11,8 @@ static float ePrev = 0.0f;
 static float rpmFilt = 0.0f;
 static Metrics metrics;
 
+// Contador atualizado pela interrupcao do encoder Hall. O loop principal
+// consome esse valor a cada ciclo de controle para calcular a velocidade.
 static volatile long encCount = 0;
 static void IRAM_ATTR onEncA() { encCount++; }
 
@@ -21,6 +23,7 @@ static float clampValue(float value, float minValue, float maxValue) {
 #if USE_SIMULATED_PLANT
 static float simRpm = 0.0f;
 
+// Modelo simples de primeira ordem usado para testar a malha sem o motor fisico.
 static float plantStep(float u_pct, float dt_s) {
   simRpm += (SIM_K * u_pct - simRpm) / SIM_TAU * dt_s;
   if (simRpm < 0) simRpm = 0;
@@ -28,6 +31,7 @@ static float plantStep(float u_pct, float dt_s) {
 }
 #endif
 
+// Permite selecionar rapidamente SP1, SP2 ou SP3 pelo monitor serial.
 static void readSerialSetpoint() {
   while (Serial.available()) {
     char c = Serial.read();
@@ -45,6 +49,8 @@ void setup() {
   pinMode(PIN_IN2, OUTPUT);
   digitalWrite(PIN_IN1, LOW);
   digitalWrite(PIN_IN2, HIGH);
+
+  // PWM via periferico LEDC do ESP32, aplicado no pino ENA do driver L298N.
   ledcSetup(PWM_CHANNEL, PWM_FREQ, PWM_RES_BITS);
   ledcAttachPin(PIN_ENA, PWM_CHANNEL);
 
@@ -70,6 +76,7 @@ void loop() {
   commsLoop();
   readSerialSetpoint();
 
+  // Mantem o periodo de amostragem em aproximadamente DT_MS sem usar delay().
   static unsigned long tPrev = 0;
   unsigned long now = millis();
   if (now - tPrev < (unsigned long)DT_MS) return;
@@ -80,18 +87,22 @@ void loop() {
 #if USE_SIMULATED_PLANT
   rpm = plantStep(u, dt);
 #else
+  // Le e zera o contador da ISR em regiao critica para evitar valor parcial.
   noInterrupts();
   long pulses = encCount; encCount = 0;
   interrupts();
   rpm = (pulses / PULSES_PER_REV) / dt * 60.0f;
 #endif
 
+  // Filtro passa-baixa reduz ruído do encoder antes de fechar a malha.
   rpmFilt = RPM_FILTER_A * rpm + (1.0f - RPM_FILTER_A) * rpmFilt;
 
+  // Entradas do controlador fuzzy: erro e variacao do erro.
   float e = g_setpoint - rpmFilt;
   float deRaw = (e - ePrev) / dt;
   ePrev = e;
 
+  // O fuzzy gera um incremento de PWM; a atuacao acumulada fica limitada a 0..100%.
   float de = clampValue(deRaw, -FUZZY_DE_MAX, FUZZY_DE_MAX);
   float du = fuzzyController(e, de);
   u += du;
@@ -102,6 +113,7 @@ void loop() {
   int duty = (int)(u * PWM_MAX_DUTY / 100.0f + 0.5f);
   ledcWrite(PWM_CHANNEL, duty);
 
+  // Atualiza metricas de desempenho e publica a telemetria para dashboard/MQTTX.
   float tsec = now / 1000.0f;
   metricsUpdate(&metrics, g_setpoint, rpmFilt, tsec);
 

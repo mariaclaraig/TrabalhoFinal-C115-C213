@@ -3,6 +3,7 @@ const TERM_COLOR = {
 };
 
 function RuleMatrix({ eIdx, deIdx }) {
+  // Mostra a base de regras 5x5 e destaca a regra dominante no instante atual.
   const TERMS = window.Fuzzy.TERMS;
   const ruleOut = window.Fuzzy.ruleOut;
   return (
@@ -41,10 +42,14 @@ function RuleMatrix({ eIdx, deIdx }) {
 
 function FuzzyPanel({ err, de }) {
   const F = window.Fuzzy;
+
+  // Normaliza erro e variacao do erro para reutilizar as funcoes de pertinencia.
   const en = Math.max(-1, Math.min(1, err / F.SCALE_E));
   const den = Math.max(-1, Math.min(1, de / F.SCALE_DE));
   const me = F.memberships(en);
   const mde = F.memberships(den);
+
+  // Escolhe o termo com maior pertinencia para acender a celula correspondente.
   const eIdx = me.indexOf(Math.max(...me));
   const deIdx = mde.indexOf(Math.max(...mde));
 

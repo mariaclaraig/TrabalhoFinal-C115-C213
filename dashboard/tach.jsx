@@ -5,11 +5,13 @@ function Tachometer({ rpm, sp, max = 240, onTarget }) {
   const A0 = -225, A1 = 45;
   const sweep = A1 - A0;
 
+  // Funcoes auxiliares para converter RPM em angulo e coordenadas SVG.
   const toRad = (d) => (d * Math.PI) / 180;
   const pt = (ang, r) => [cx + r * Math.cos(toRad(ang)), cy + r * Math.sin(toRad(ang))];
   const angOf = (v) => A0 + (Math.max(0, Math.min(max, v)) / max) * sweep;
 
   const ticks = tachMemo(() => {
+    // Marcas do tacometro recalculadas apenas quando o limite maximo muda.
     const arr = [];
     const step = 30;
     for (let v = 0; v <= max; v += step) {
@@ -25,6 +27,7 @@ function Tachometer({ rpm, sp, max = 240, onTarget }) {
 
 
   const arcPath = (vStart, vEnd, r) => {
+    // Gera o caminho SVG de um arco entre dois valores de RPM.
     const a0 = angOf(vStart), a1 = angOf(vEnd);
     const [sx, sy] = pt(a0, r), [ex, ey] = pt(a1, r);
     const large = a1 - a0 > 180 ? 1 : 0;
@@ -56,6 +59,7 @@ function Tachometer({ rpm, sp, max = 240, onTarget }) {
         </defs>
 
 
+        {/* Arco de fundo e arco preenchido com a velocidade atual. */}
         <path d={arcPath(0, max, R)} fill="none" stroke="rgba(150,175,205,0.14)" strokeWidth="10" strokeLinecap="round" />
 
         <path d={arcPath(0, Math.max(0.1, rpm), R)} fill="none"
@@ -65,6 +69,7 @@ function Tachometer({ rpm, sp, max = 240, onTarget }) {
               stroke={onTarget ? "var(--green)" : "var(--cyan)"} strokeWidth="6" strokeLinecap="round" />
 
 
+        {/* Marcacoes numericas do tacometro. */}
         {ticks.map((t, i) => (
           <g key={i}>
             <line x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
@@ -80,12 +85,14 @@ function Tachometer({ rpm, sp, max = 240, onTarget }) {
         ))}
 
 
+        {/* Marcador vermelho do set point atual. */}
         <line x1={m1x} y1={m1y} x2={m2x} y2={m2y} stroke="var(--red)" strokeWidth="3.5" strokeLinecap="round" />
         <polygon
           points={`${mlx},${mly} ${mlx - 6},${mly - 9} ${mlx + 6},${mly - 9}`}
           fill="var(--red)" transform={`rotate(${spAng + 90} ${mlx} ${mly})`} />
 
 
+        {/* Ponteiro da velocidade medida. */}
         <line x1={ntx} y1={nty} x2={nx} y2={ny} stroke="url(#needleG)" strokeWidth="4.5" strokeLinecap="round" filter="url(#glow)" />
         <line x1={ntx} y1={nty} x2={nx} y2={ny} stroke="url(#needleG)" strokeWidth="2.6" strokeLinecap="round" />
         <circle cx={cx} cy={cy} r="13" fill="url(#hubG)" stroke="var(--line-2)" />

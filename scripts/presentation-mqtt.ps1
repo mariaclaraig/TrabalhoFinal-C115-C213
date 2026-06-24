@@ -20,6 +20,7 @@ $dashboardConfigPath = Join-Path $repoRoot "dashboard/config.js"
 $mosquittoConfigPath = Join-Path $repoRoot ".dont_commit/mosquitto-local.conf"
 
 function Get-DefaultBrokerHost {
+    # Escolhe automaticamente um IP local util para ESP32, MQTTX e dashboard.
     $ip = Get-NetIPAddress -AddressFamily IPv4 |
         Where-Object {
             $_.IPAddress -notlike "127.*" -and
@@ -39,6 +40,7 @@ function Get-DefaultBrokerHost {
 function Resolve-MosquittoPath {
     param([string]$ConfiguredPath)
 
+    # Usa o caminho informado, o PATH do sistema ou locais comuns de instalacao.
     if ($ConfiguredPath) { return $ConfiguredPath }
 
     $cmd = Get-Command mosquitto -ErrorAction SilentlyContinue
@@ -64,6 +66,7 @@ function Write-Utf8NoBom {
         [string]$Value
     )
 
+    # Evita BOM para manter compatibilidade com o compilador Arduino/PlatformIO.
     $encoding = New-Object System.Text.UTF8Encoding($false)
     [System.IO.File]::WriteAllText($Path, $Value, $encoding)
 }
@@ -74,6 +77,7 @@ if (-not $BrokerHost) {
 
 $dashboardUrl = "ws://$BrokerHost`:$WebSocketPort"
 
+# Configuracao gerada para o firmware ESP32.
 $projectConfig = @"
 #pragma once
 
@@ -85,10 +89,12 @@ $projectConfig = @"
 #define MQTT_CLIENTID  "$ClientId"
 "@
 
+# Configuracao gerada para o dashboard abrir o WebSocket MQTT correto.
 $dashboardConfig = @"
 window.DASHBOARD_MQTT_URL = "$dashboardUrl";
 "@
 
+# Broker Mosquitto local com listener MQTT TCP e listener WebSocket.
 $mosquittoConfig = @"
 listener $MqttPort $BrokerBindAddress
 protocol mqtt
