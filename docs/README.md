@@ -2,12 +2,16 @@
 
 Esta pasta reúne a documentação final dos trabalhos de **C115 (IoT)** e **C213 (Sistemas Embarcados)**.
 
-## Arquivos
+## C115 - IoT
 
 - [IoT - Misturador Industrial](iot-misturador-industrial.md): documentação da solução IoT, mercado, benefícios, viabilidade, MQTTX, simulação e protótipo funcional.
+- [Apresentação C115](Apresenta%C3%A7%C3%A3oC115.pptx): slides finais da parte de IoT do projeto.
+
+## C213 - Sistemas Embarcados
+
 - [Embarcados - Controle Fuzzy](embarcados-controle-fuzzy.md): documentação técnica do firmware, planta, controle fuzzy, ESP32, dashboard e testes.
 - [Relatório técnico em PDF](Relatorio_Tecnico_C213_Misturador_Fuzzy.pdf): relatório final do misturador industrial com controle fuzzy embarcado.
-- [Apresentação C213](Apresenta%C3%A7%C3%A3oC213.pptx): slides finais da parte de C213 do projeto.
+- [Apresentação C213](Apresenta%C3%A7%C3%A3oC213.pptx): slides finais da parte de Sistemas Embarcados do projeto.
 
 ## Visão geral
 
@@ -19,5 +23,5 @@ A solução combina:
 - telemetria em tempo real por MQTT;
 - dashboard web para supervisão;
 - MQTTX como ferramenta de demonstração e simulação;
-- relatório técnico em PDF e apresentação final;
+- relatório técnico em PDF e apresentações finais;
 - documentação técnica separada por disciplina.
