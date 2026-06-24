@@ -24,6 +24,7 @@ O índice completo dos documentos está em [docs/README.md](docs/README.md).
 - [Documentação técnica - Controle Fuzzy Embarcado](docs/embarcados-controle-fuzzy.md)
 - [Relatório técnico em PDF - Controle Fuzzy](docs/Relatorio_Tecnico_C213_Misturador_Fuzzy.pdf)
 - [Apresentação C213](docs/Apresenta%C3%A7%C3%A3oC213.pptx)
+- [Vídeo da apresentação C213](https://www.youtube.com/watch?v=g1zKja6By0g)
 
 ## Estrutura do projeto
 

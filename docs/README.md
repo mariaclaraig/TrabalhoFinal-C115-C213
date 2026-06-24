@@ -12,6 +12,7 @@ Esta pasta reúne a documentação final dos trabalhos de **C115 (IoT)** e **C21
 - [Embarcados - Controle Fuzzy](embarcados-controle-fuzzy.md): documentação técnica do firmware, planta, controle fuzzy, ESP32, dashboard e testes.
 - [Relatório técnico em PDF](Relatorio_Tecnico_C213_Misturador_Fuzzy.pdf): relatório final do misturador industrial com controle fuzzy embarcado.
 - [Apresentação C213](Apresenta%C3%A7%C3%A3oC213.pptx): slides finais da parte de Sistemas Embarcados do projeto.
+- [Vídeo da apresentação C213](https://www.youtube.com/watch?v=g1zKja6By0g): gravação da apresentação e demonstração do trabalho.
 
 ## Visão geral
 
